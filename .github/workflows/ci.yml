@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} / ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        build_type: [Release]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build
+        run: make BUILD_TYPE=${{ matrix.build_type }} build
+
+      - name: C/C++ Lint (clang-format + clang-tidy)
+        uses: cpp-linter/cpp-linter-action@v2
+        id: linter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          style: 'file'          
+          tidy-checks: ''        
+          database: build
+          file-annotations: true
+          thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
+
+          ignore-tidy: 'tests/**'
+          ignore-format: 'tests/**'
+
+      - name: Fail on lint issues
+        if: |
+          steps.linter.outputs.clang-format-checks-failed > 0 ||
+          steps.linter.outputs.clang-tidy-checks-failed > 0
+        run: exit 1
+
+      - name: Test
+        id: test
+        env:
+          GTEST_COLOR: 1
+        run: |
+          ctest --test-dir build \
+                --output-on-failure \
+                -C ${{ matrix.build_type }} \
+                --output-junit test-results.xml
+
+      - name: Publish test report
+        if: ${{ always() && steps.test.outcome != 'skipped' }}
+        uses: dorny/test-reporter@v1
+        with:
+          name: GoogleTest (${{ matrix.os }} / ${{ matrix.build_type }})
+          path: build/test-results.xml
+          reporter: java-junit
+          fail-on-error: false
