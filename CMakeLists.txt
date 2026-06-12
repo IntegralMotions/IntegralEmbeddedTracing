@@ -10,6 +10,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+include(FetchContent)
+
+FetchContent_Declare(
+    IntegralCommunication
+    GIT_REPOSITORY https://github.com/IntegralMotions/IntegralCommunication.git
+    GIT_TAG        v1.0.0
+    GIT_SHALLOW    TRUE
+)
+
+FetchContent_MakeAvailable(IntegralCommunication)
+
 # Detect if this project is the top-level one
 set(INTEGRAL_IS_TOP_LEVEL OFF)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -37,10 +48,12 @@ target_include_directories(IntegralEmbeddedTracing
 
 target_compile_features(IntegralEmbeddedTracing PUBLIC cxx_std_20)
 
+target_link_libraries(IntegralEmbeddedTracing PUBLIC
+    IntegralCommunication::IntegralCommunication
+)
+
 # ----------------- Tests -----------------
 if(INTEGRAL_BUILD_TESTS)
-    include(FetchContent)
-
     FetchContent_Declare(
         googletest
         URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip

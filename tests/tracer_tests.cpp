@@ -3,7 +3,7 @@
 #include "trace_types.h"
 #include "trace_controller.h"
 #include "trace_communication/trace_communication.h"
-#include "seven_bit_encoding.h"
+#include <IntegralCommunication/SevenBitEncoding.h>
 
 // TestCommunication: buffers writes and simulates reads.
 class TestCommunication: public TraceCommunication {

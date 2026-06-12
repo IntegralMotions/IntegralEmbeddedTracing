@@ -1,6 +1,7 @@
+#include <cstring>
+
 #include <gtest/gtest.h>
 #include "trace_communication/buffer_trace_communication.h"
-#include "fast_copy.h"
 
 class TestBufferTraceCommunication: public BufferTraceCommunication {
 public:
@@ -32,7 +33,7 @@ public:
 		if (_writeBufferIndex + length > BUFFER_SIZE) {
 			return;
 		}
-		fast_copy(_writeBuffer + _writeBufferIndex, data, length);
+		memcpy(_writeBuffer + _writeBufferIndex, data, length);
 		_writeBufferIndex += length;
 	}
 	void clearOutput() {

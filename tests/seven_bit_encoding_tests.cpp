@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <vector>
 #include <random>
-#include "seven_bit_encoding.h"
+#include <IntegralCommunication/SevenBitEncoding.h>
 
 TEST(SevenBitEncoding, LeftMaskTest) {
 	EXPECT_EQ(SevenBitEncoding::leftMask(0), static_cast<uint8_t>(0x00));
@@ -187,4 +187,3 @@ TEST(SevenBitEncoding, IsLastByteTest) {
 	EXPECT_EQ(SevenBitEncoding::isLastByte(0x7F), true);
 	EXPECT_EQ(SevenBitEncoding::isLastByte(0x80), false);
 }
-

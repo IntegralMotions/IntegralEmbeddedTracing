@@ -5,6 +5,4 @@
 /**
  * @brief Represents a traceable variable with associated metadata and update handlers.
  */
-struct VariableTrace : public Trace
-{
-};
+struct VariableTrace : public Trace {};

@@ -1,32 +1,33 @@
 #include "trace_communication/trace_communication.h"
-#include "seven_bit_encoding.h"
+#include <IntegralCommunication/SevenBitEncoding.h>
 #include <cstring>
 
-TraceCommunication::TraceCommunication() { }
-TraceCommunication::~TraceCommunication() { }
+TraceCommunication::TraceCommunication() {}
+TraceCommunication::~TraceCommunication() {}
 
-void TraceCommunication::writeTraceMessage(const TraceHeader &header, const uint8_t* value, const uint8_t valueSize) {
+void TraceCommunication::writeTraceMessage(const TraceHeader& header, const uint8_t* value, const uint8_t valueSize) {
     uint8_t toSend[18];
     getBytesFromTraceHeader(header, toSend);
     memcpy(&toSend[2], value, valueSize);
 
-	size_t encodedSize = SevenBitEncoding::getEncodedBufferSize(2 + valueSize);
-	uint8_t encoded[encodedSize];
-	size_t actualEncodedSize = SevenBitEncoding::encodeBuffer(toSend, 2 + valueSize, encoded);
+    size_t encodedSize = SevenBitEncoding::getEncodedBufferSize(2 + valueSize);
+    uint8_t encoded[encodedSize];
+    size_t actualEncodedSize = SevenBitEncoding::encodeBuffer(toSend, 2 + valueSize, encoded);
 
     write(encoded, actualEncodedSize);
 }
 
-void TraceCommunication::writeArrayTraceMessage(const TraceHeader &header, uint32_t index, const uint8_t* value, const uint8_t valueSize) {
+void TraceCommunication::writeArrayTraceMessage(const TraceHeader& header, uint32_t index, const uint8_t* value,
+                                                const uint8_t valueSize) {
     size_t lenSize = SevenBitEncoding::getEncodedSize(index);
     uint8_t toSend[23];
     getBytesFromTraceHeader(header, toSend);
     SevenBitEncoding::encodeValue(index, toSend + 2);
     memcpy(toSend + 2 + lenSize, value, valueSize);
 
-	size_t encodedSize = SevenBitEncoding::getEncodedBufferSize(2 + lenSize + valueSize);
-	uint8_t encoded[encodedSize];
-	size_t actualEncodedSize = SevenBitEncoding::encodeBuffer(toSend, 2 + lenSize + valueSize, encoded);
+    size_t encodedSize = SevenBitEncoding::getEncodedBufferSize(2 + lenSize + valueSize);
+    uint8_t encoded[encodedSize];
+    size_t actualEncodedSize = SevenBitEncoding::encodeBuffer(toSend, 2 + lenSize + valueSize, encoded);
 
     write(encoded, actualEncodedSize);
 }
@@ -43,14 +44,13 @@ bool TraceCommunication::tryReadTraceMessage(TraceHeader& header, uint8_t* value
             arraySizeReadIndex = 0;
             _receivingState = WAITING_FOR_DATA;
         }
-    }
-    else if (_receivingState == WAITING_FOR_DATA) {
+    } else if (_receivingState == WAITING_FOR_DATA) {
         if (_currentHeader.messageType == TraceMessageType::ARRAY_UPDATE) {
             if (arraySizeReadIndex > 0 && (rxBuffer[arraySizeReadIndex - 1] & 0x80) != 0) {
-                if (tryRead(rxBuffer + arraySizeReadIndex, 1))
+                if (tryRead(rxBuffer + arraySizeReadIndex, 1)) {
                     arraySizeReadIndex++;
-            }
-            else {
+                }
+            } else {
                 uint8_t dataSize = getTraceValueTypeSize(_currentHeader.valueType);
                 if (tryRead(rxBuffer + arraySizeReadIndex, dataSize)) {
                     _receivingState = WAITING_FOR_HEADER;
@@ -59,8 +59,7 @@ bool TraceCommunication::tryReadTraceMessage(TraceHeader& header, uint8_t* value
                     return true;
                 }
             }
-        }
-        else {
+        } else {
             uint8_t dataSize = getTraceValueTypeSize(_currentHeader.valueType);
             if (tryRead(rxBuffer, dataSize)) {
                 _receivingState = WAITING_FOR_HEADER;
