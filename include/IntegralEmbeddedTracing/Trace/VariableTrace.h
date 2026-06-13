@@ -1,6 +1,6 @@
 #pragma once
 
-#include "trace.h"
+#include "Trace.h"
 
 /**
  * @brief Represents a traceable variable with associated metadata and update handlers.

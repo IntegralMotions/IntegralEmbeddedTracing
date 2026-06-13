@@ -224,11 +224,21 @@ Indicates whether trace acquisition was successfully started.
 
 ### Payload
 
-| Offset | Size    | Name                            | Type                                     | Description                                                                                |
-| ------ | ------- | ------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------ |
-| 0      | 1 byte  | Status                          | uint8                                    | 0 = Success, non-zero = Error                                                              |
-| 1      | 1 byte  | ArrayLength                     | uint8                                    | The length of the upcoming array                                                           |
-| 2      | N bytes | VariableMapping `or` ErrorEntry | VariableMappingEntry[] `or` ErrorEntry[] | A list of variable mappings if successful, or a list of error entries if an error occurred |
+| Offset | Size    | Name             | Type                   | Description                                      |
+| ------ | ------- | ---------------- | ---------------------- | ------------------------------------------------ |
+| 0      | 1 byte  | MappingCount     | uint8                  | Number of accepted variables in this response    |
+| 1      | N bytes | VariableMappings | VariableMappingEntry[] | Repeated accepted variable mappings              |
+| ...    | 1 byte  | ErrorCount       | uint8                  | Number of rejected variables in this response    |
+| ...    | N bytes | Errors           | ErrorEntry[]           | Repeated rejected variable entries with an error |
+
+Tracing starts when `MappingCount` is greater than zero. The host can infer the result from the counts:
+
+| MappingCount | ErrorCount | Result          |
+| ------------ | ---------- | --------------- |
+| > 0          | 0          | Full success    |
+| > 0          | > 0        | Partial success |
+| 0            | > 0        | Full failure    |
+| 0            | 0          | Empty request   |
 
 ### VariableMappingEntry
 
@@ -241,18 +251,26 @@ Each variable mapping has the following format:
 
 A different id is used during streaming than during storage, as you can only trace 64 values at a time, but you are able to store up to 256 variables to trace. The host decides what variables need to be traced and thus streamed.
 
-The `VariableMappingEntry` structure is repeated `ArrayLength` times.
+The `VariableMappingEntry` structure is repeated `MappingCount` times.
 
 ### ErrorEntry
 
 Each error entry has the following format:
 
-| Offset | Size   | Name       | Type  | Description                                  |
-| ------ | ------ | ---------- | ----- | -------------------------------------------- |
-| 0      | 1 byte | VariableId | uint8 | Internal variable id used by the trace store |
-| 1      | 1 byte | Error      | uint8 | The error code for this variable             |
+| Offset | Size   | Name                | Type  | Description                      |
+| ------ | ------ | ------------------- | ----- | -------------------------------- |
+| 0      | 1 byte | VariableId          | uint8 | Requested variable id            |
+| 1      | 1 byte | StartTraceErrorCode | uint8 | The error code for this variable |
 
-The `ErrorEntry` structure is repeated `ArrayLength` times.
+The `ErrorEntry` structure is repeated `ErrorCount` times.
+
+### StartTraceErrorCode
+
+| Value | Name              | Description                                     |
+| ----- | ----------------- | ----------------------------------------------- |
+| 0x01  | VariableNotFound  | Requested variable id is not registered         |
+| 0x02  | TooManyVariables  | Request exceeded the maximum of 64 trace values |
+| 0x03  | DuplicateVariable | Requested variable id was already accepted      |
 
 ## TraceData (0x07)
 
@@ -279,7 +297,7 @@ Each trace data entry has the following format:
 
 The size of `Value` is determined by the `SizeCode` in the `TraceDataHeader`.
 
-### TraceSampleHeaderEntry
+### TraceDataHeaderEntry
 
 | Bits | Name       | Description                |
 | ---- | ---------- | -------------------------- |
