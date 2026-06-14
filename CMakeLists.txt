@@ -12,6 +12,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 include(FetchContent)
 
+option(INTEGRAL_BUILD_DEPENDENCY_TESTS "Build tests for fetched dependencies" OFF)
+
 FetchContent_Declare(
     IntegralCommunication
     GIT_REPOSITORY https://github.com/IntegralMotions/IntegralCommunication.git
@@ -19,6 +21,7 @@ FetchContent_Declare(
     GIT_SHALLOW    TRUE
 )
 
+set(INTEGRALCOMM_BUILD_TESTS ${INTEGRAL_BUILD_DEPENDENCY_TESTS} CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(IntegralCommunication)
 
 # Detect if this project is the top-level one
@@ -77,5 +80,7 @@ if(INTEGRAL_BUILD_TESTS)
     )
 
     include(GoogleTest)
-    gtest_discover_tests(IntegralEmbeddedTracingTests)
+    gtest_discover_tests(IntegralEmbeddedTracingTests
+        PROPERTIES LABELS IntegralEmbeddedTracing
+    )
 endif()
