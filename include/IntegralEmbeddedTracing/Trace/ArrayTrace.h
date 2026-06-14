@@ -1,7 +1,8 @@
 #pragma once
 
-#include "trace.h"
 #include <functional>
+
+#include "Trace.h"
 
 /**
  * @brief Represents a traceable array with associated metadata and update handlers.
