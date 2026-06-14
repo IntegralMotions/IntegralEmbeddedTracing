@@ -10,14 +10,13 @@
 #include "TraceDataHeader.h"
 #include "TraceTypes.h"
 
-#define MAX_TRACED_VARIABLES 256
-#define MAX_ACTIVE_TRACE_VARIABLES 64
-#define MAX_PREVIOUS_VALUE_STORAGE_BYTES 2048
-
 struct Message;
 
 class TraceController {
   public:
+    static constexpr uint16_t MaxTracedVariables = 256;
+    static constexpr uint8_t MaxActiveTraceVariables = 64;
+
     static void init(Communication& comm);
     static TraceController& get();
 
@@ -47,11 +46,11 @@ class TraceController {
     uint16_t _amountOfTraces = 0;
     uint16_t _amountOfVariableTraces = 0;
     uint16_t _amountOfArrayTraces = 0;
-    std::array<VariableTrace, MAX_TRACED_VARIABLES> _variables;
-    std::array<ArrayTrace, MAX_TRACED_VARIABLES> _arrays;
-    std::array<uint8_t*, MAX_TRACED_VARIABLES> _previousValueStorage = {nullptr};
-    std::array<Trace*, MAX_TRACED_VARIABLES> _traceTableLookup = {nullptr};
-    std::array<uint8_t, MAX_ACTIVE_TRACE_VARIABLES> _tracedVariableIds;
+    std::array<VariableTrace, MaxTracedVariables> _variables;
+    std::array<ArrayTrace, MaxTracedVariables> _arrays;
+    std::array<uint8_t*, MaxTracedVariables> _previousValueStorage = {nullptr};
+    std::array<Trace*, MaxTracedVariables> _traceTableLookup = {nullptr};
+    std::array<uint8_t, MaxActiveTraceVariables> _tracedVariableIds;
     uint8_t _amountOfTracedVariables = 0;
     bool _variableConfigSend = false;
     bool _arrayConfigSend = false;
@@ -60,7 +59,7 @@ class TraceController {
 };
 
 template <typename T> void TraceController::addVariable(const char* name, T* ref) {
-    if (_amountOfTraces >= MAX_TRACED_VARIABLES) {
+    if (_amountOfTraces >= MaxTracedVariables) {
         return;
     }
     VariableTrace trace;
@@ -83,7 +82,7 @@ template <typename T> void TraceController::addVariable(const char* name, T* ref
 }
 
 template <typename T> void TraceController::addArray(const char* name, T* ref, uint32_t length) {
-    if (_amountOfTraces >= MAX_TRACED_VARIABLES) {
+    if (_amountOfTraces >= MaxTracedVariables) {
         return;
     }
     ArrayTrace trace;

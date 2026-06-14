@@ -262,7 +262,7 @@ void TraceController::sendStartTraceResponse(const Message& message) {
             }
         }
 
-        if (!hasError && _amountOfTracedVariables >= MAX_ACTIVE_TRACE_VARIABLES) {
+        if (!hasError && _amountOfTracedVariables >= TraceController::MaxActiveTraceVariables) {
             hasError = true;
             errorCode = StartTraceErrorCode::TOO_MANY_VARIABLES;
         }
