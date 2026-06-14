@@ -75,8 +75,8 @@ template <typename T> void TraceController::addVariable(const char* name, T* ref
     trace.value = reinterpret_cast<uint8_t*>(ref);
     _previousValueStorage[trace.id] = new uint8_t[trace.typeSize];
     trace.previousValue = _previousValueStorage[trace.id];
-    trace.updateHeader = {.variableId = static_cast<uint8_t>(trace.id),
-                          .sizeCode = getTraceDataSizeCode(trace.typeSize)};
+    trace.updateHeader.variableId = static_cast<uint8_t>(trace.id);
+    trace.updateHeader.sizeCode = getTraceDataSizeCode(trace.typeSize);
     _variables[_amountOfVariableTraces] = trace;
     _traceTableLookup[trace.id] = &_variables[_amountOfVariableTraces];
     _amountOfVariableTraces++;
