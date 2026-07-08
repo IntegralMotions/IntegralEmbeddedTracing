@@ -1,4 +1,4 @@
-#include "IntegralEmbeddedTracing/TraceDataHeader.h"
+#include "TraceDataHeader.h"
 
 namespace {
     constexpr uint8_t OneByteValueSize = 1;
@@ -7,17 +7,19 @@ namespace {
     constexpr uint8_t EightByteValueSize = 8;
 } // namespace
 
-TraceDataSizeCode getTraceDataSizeCode(uint8_t typeSize) {
-    switch (typeSize) {
-    case OneByteValueSize:
-        return TraceDataSizeCode::ONE_BYTE;
-    case TwoByteValueSize:
-        return TraceDataSizeCode::TWO_BYTES;
-    case FourByteValueSize:
-        return TraceDataSizeCode::FOUR_BYTES;
-    case EightByteValueSize:
-        return TraceDataSizeCode::EIGHT_BYTES;
-    default:
-        return TraceDataSizeCode::ONE_BYTE;
+namespace IntegralMotions::Tracing {
+    TraceDataSizeCode getTraceDataSizeCode(uint8_t typeSize) {
+        switch (typeSize) {
+        case OneByteValueSize:
+            return TraceDataSizeCode::ONE_BYTE;
+        case TwoByteValueSize:
+            return TraceDataSizeCode::TWO_BYTES;
+        case FourByteValueSize:
+            return TraceDataSizeCode::FOUR_BYTES;
+        case EightByteValueSize:
+            return TraceDataSizeCode::EIGHT_BYTES;
+        default:
+            return TraceDataSizeCode::ONE_BYTE;
+        }
     }
-}
+} // namespace IntegralMotions::Tracing

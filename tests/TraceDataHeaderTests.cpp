@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "IntegralEmbeddedTracing/TraceDataHeader.h"
+#include "TraceDataHeader.h"
+
+using namespace IntegralMotions::Tracing;
 
 TEST(TraceDataHeaderTest, SizeCodeMatchesProtocolValues) {
     EXPECT_EQ(getTraceDataSizeCode(1), TraceDataSizeCode::ONE_BYTE);

@@ -10,9 +10,11 @@
 #include <IntegralCommunication/Communication.h>
 #include <IntegralCommunication/Encoding/CobsEncoding.h>
 
-#include "IntegralEmbeddedTracing/TraceController.h"
-#include "IntegralEmbeddedTracing/TraceDataHeader.h"
-#include "IntegralEmbeddedTracing/TraceTypes.h"
+#include "TraceController.h"
+#include "TraceDataHeader.h"
+#include "TraceTypes.h"
+
+using namespace IntegralMotions::Tracing;
 
 class TestCommunication : public Communication {
   public:
