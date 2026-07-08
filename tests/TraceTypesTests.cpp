@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "IntegralEmbeddedTracing/TraceTypes.h"
+#include "TraceTypes.h"
+
+using namespace IntegralMotions::Tracing;
 
 TEST(TraceTypesTest, ValueTypeSizesMatchProtocolTypes) {
     EXPECT_EQ(getTraceValueTypeSize(TraceValueType::UNKNOWN), 0U);
