@@ -9,8 +9,43 @@ Checks: >
   cppcoreguidelines-non-private-member-variables-in-classes,
   -modernize-use-trailing-return-type,
   -cppcoreguidelines-avoid-magic-numbers,
-  -cppcoreguidelines-owning-memory
+  -cppcoreguidelines-owning-memory,
 
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 FormatStyle: none
+
+CheckOptions:
+  # Types: MotionController
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.TypedefCase: CamelCase
+  readability-identifier-naming.TypeAliasCase: CamelCase
+  readability-identifier-naming.TemplateParameterCase: CamelCase
+
+  # Functions: calculatePosition()
+  readability-identifier-naming.FunctionCase: camelBack
+  readability-identifier-naming.MethodCase: camelBack
+  readability-identifier-naming.ConstexprFunctionCase: camelBack
+  readability-identifier-naming.ConstexprMethodCase: camelBack
+
+  # Variables: Position, TargetPosition
+  readability-identifier-naming.VariableCase: CamelCase
+  readability-identifier-naming.ParameterCase: CamelCase
+  readability-identifier-naming.ParameterPackCase: CamelCase
+  readability-identifier-naming.PrivateMemberCase: CamelCase
+  readability-identifier-naming.ProtectedMemberCase: CamelCase
+  readability-identifier-naming.PublicMemberCase: CamelCase
+
+  # Constants and enumerators: MaximumSpeed, Running
+  readability-identifier-naming.ConstantCase: CamelCase
+  readability-identifier-naming.ConstantMemberCase: CamelCase
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  readability-identifier-naming.EnumConstantCase: CamelCase
+
+  # Macros: INTEGRAL_MOTIONS_ASSERT
+  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+
+  # Namespace: IntegralMotions
+  readability-identifier-naming.NamespaceCase: CamelCase
