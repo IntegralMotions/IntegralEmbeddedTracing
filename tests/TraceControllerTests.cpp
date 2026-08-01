@@ -137,29 +137,29 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::GetConfigRequest)});
         controller.loop();
 
-        const std::vector<uint8_t> response = takeSingleResponse(communication);
-        ASSERT_EQ(response.size(), 19U);
-        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::GetConfigResponse));
-        EXPECT_EQ(response[1], 2U);
+        const std::vector<uint8_t> Response = takeSingleResponse(communication);
+        ASSERT_EQ(Response.size(), 19U);
+        EXPECT_EQ(Response[0], static_cast<uint8_t>(TraceProtocolMessageType::GetConfigResponse));
+        EXPECT_EQ(Response[1], 2U);
 
-        EXPECT_EQ(response[2], FirstVariableId);
-        EXPECT_EQ(response[3], static_cast<uint8_t>(TraceValueType::UInt8));
-        EXPECT_EQ(response[4], 5U);
-        EXPECT_EQ(response[5], static_cast<uint8_t>('f'));
-        EXPECT_EQ(response[6], static_cast<uint8_t>('i'));
-        EXPECT_EQ(response[7], static_cast<uint8_t>('r'));
-        EXPECT_EQ(response[8], static_cast<uint8_t>('s'));
-        EXPECT_EQ(response[9], static_cast<uint8_t>('t'));
+        EXPECT_EQ(Response[2], FirstVariableId);
+        EXPECT_EQ(Response[3], static_cast<uint8_t>(TraceValueType::UInt8));
+        EXPECT_EQ(Response[4], 5U);
+        EXPECT_EQ(Response[5], static_cast<uint8_t>('f'));
+        EXPECT_EQ(Response[6], static_cast<uint8_t>('i'));
+        EXPECT_EQ(Response[7], static_cast<uint8_t>('r'));
+        EXPECT_EQ(Response[8], static_cast<uint8_t>('s'));
+        EXPECT_EQ(Response[9], static_cast<uint8_t>('t'));
 
-        EXPECT_EQ(response[10], SecondVariableId);
-        EXPECT_EQ(response[11], static_cast<uint8_t>(TraceValueType::Int16));
-        EXPECT_EQ(response[12], 6U);
-        EXPECT_EQ(response[13], static_cast<uint8_t>('s'));
-        EXPECT_EQ(response[14], static_cast<uint8_t>('e'));
-        EXPECT_EQ(response[15], static_cast<uint8_t>('c'));
-        EXPECT_EQ(response[16], static_cast<uint8_t>('o'));
-        EXPECT_EQ(response[17], static_cast<uint8_t>('n'));
-        EXPECT_EQ(response[18], static_cast<uint8_t>('d'));
+        EXPECT_EQ(Response[10], SecondVariableId);
+        EXPECT_EQ(Response[11], static_cast<uint8_t>(TraceValueType::Int16));
+        EXPECT_EQ(Response[12], 6U);
+        EXPECT_EQ(Response[13], static_cast<uint8_t>('s'));
+        EXPECT_EQ(Response[14], static_cast<uint8_t>('e'));
+        EXPECT_EQ(Response[15], static_cast<uint8_t>('c'));
+        EXPECT_EQ(Response[16], static_cast<uint8_t>('o'));
+        EXPECT_EQ(Response[17], static_cast<uint8_t>('n'));
+        EXPECT_EQ(Response[18], static_cast<uint8_t>('d'));
     }
 
     {
