@@ -134,16 +134,16 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         controller.addVariable("first", &firstValue);
         controller.addVariable("second", &secondValue);
 
-        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::GET_CONFIG_REQUEST)});
+        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::GetConfigRequest)});
         controller.loop();
 
         const std::vector<uint8_t> response = takeSingleResponse(communication);
         ASSERT_EQ(response.size(), 19U);
-        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::GET_CONFIG_RESPONSE));
+        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::GetConfigResponse));
         EXPECT_EQ(response[1], 2U);
 
         EXPECT_EQ(response[2], FirstVariableId);
-        EXPECT_EQ(response[3], static_cast<uint8_t>(TraceValueType::UINT8));
+        EXPECT_EQ(response[3], static_cast<uint8_t>(TraceValueType::UInt8));
         EXPECT_EQ(response[4], 5U);
         EXPECT_EQ(response[5], static_cast<uint8_t>('f'));
         EXPECT_EQ(response[6], static_cast<uint8_t>('i'));
@@ -152,7 +152,7 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         EXPECT_EQ(response[9], static_cast<uint8_t>('t'));
 
         EXPECT_EQ(response[10], SecondVariableId);
-        EXPECT_EQ(response[11], static_cast<uint8_t>(TraceValueType::INT16));
+        EXPECT_EQ(response[11], static_cast<uint8_t>(TraceValueType::Int16));
         EXPECT_EQ(response[12], 6U);
         EXPECT_EQ(response[13], static_cast<uint8_t>('s'));
         EXPECT_EQ(response[14], static_cast<uint8_t>('e'));
@@ -164,13 +164,13 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
 
     {
         SCOPED_TRACE("start trace maps valid variables and reports duplicate and missing ids");
-        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::START_TRACE_REQUEST), 4U,
+        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::StartTraceRequest), 4U,
                                     FirstVariableId, SecondVariableId, FirstVariableId, MissingVariableId});
         controller.checkForMessage();
 
         const std::vector<uint8_t> response = takeSingleResponse(communication);
         ASSERT_EQ(response.size(), 11U);
-        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::START_TRACE_RESPONSE));
+        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::StartTraceResponse));
         EXPECT_EQ(response[1], 2U);
         EXPECT_EQ(response[2], FirstVariableId);
         EXPECT_EQ(response[3], 0U);
@@ -189,17 +189,17 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
 
         const std::vector<uint8_t> response = takeSingleResponse(communication);
         ASSERT_EQ(response.size(), 7U);
-        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::TRACE_DATA));
+        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::TraceData));
         EXPECT_EQ(response[1], 2U);
 
         TraceDataHeader firstHeader = readTraceDataHeader(response, 2U);
         EXPECT_EQ(firstHeader.variableId, 0U);
-        EXPECT_EQ(firstHeader.sizeCode, TraceDataSizeCode::ONE_BYTE);
+        EXPECT_EQ(firstHeader.sizeCode, TraceDataSizeCode::OneByte);
         EXPECT_EQ(response[3], firstValue);
 
         TraceDataHeader secondHeader = readTraceDataHeader(response, 4U);
         EXPECT_EQ(secondHeader.variableId, 1U);
-        EXPECT_EQ(secondHeader.sizeCode, TraceDataSizeCode::TWO_BYTES);
+        EXPECT_EQ(secondHeader.sizeCode, TraceDataSizeCode::TwoBytes);
         int16_t tracedSecondValue = 0;
         memcpy(&tracedSecondValue, response.data() + 5U, sizeof(tracedSecondValue));
         EXPECT_EQ(tracedSecondValue, secondValue);
@@ -218,11 +218,11 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
 
         const std::vector<uint8_t> response = takeSingleResponse(communication);
         ASSERT_EQ(response.size(), 4U);
-        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::TRACE_DATA));
+        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::TraceData));
         EXPECT_EQ(response[1], 1U);
         TraceDataHeader header = readTraceDataHeader(response, 2U);
         EXPECT_EQ(header.variableId, 0U);
-        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::ONE_BYTE);
+        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::OneByte);
         EXPECT_EQ(response[3], firstValue);
     }
 
@@ -240,11 +240,11 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
 
         const std::vector<uint8_t> response = takeSingleResponse(communication);
         ASSERT_EQ(response.size(), 5U);
-        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::TRACE_DATA));
+        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::TraceData));
         EXPECT_EQ(response[1], 1U);
         TraceDataHeader header = readTraceDataHeader(response, 2U);
         EXPECT_EQ(header.variableId, 1U);
-        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::TWO_BYTES);
+        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::TwoBytes);
         int16_t tracedSecondValue = 0;
         memcpy(&tracedSecondValue, response.data() + 3U, sizeof(tracedSecondValue));
         EXPECT_EQ(tracedSecondValue, secondValue);
@@ -252,7 +252,7 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
 
     {
         SCOPED_TRACE("stop trace has no response and stops later updates");
-        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::STOP_TRACE_EVENT)});
+        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::StopTraceEvent)});
         controller.checkForMessage();
         EXPECT_TRUE(communication.output.empty());
 
@@ -265,12 +265,12 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
     {
         SCOPED_TRACE("start trace with only invalid ids does not start tracing");
         sendMessage(communication,
-                    {static_cast<uint8_t>(TraceProtocolMessageType::START_TRACE_REQUEST), 1U, MissingVariableId});
+                    {static_cast<uint8_t>(TraceProtocolMessageType::StartTraceRequest), 1U, MissingVariableId});
         controller.checkForMessage();
 
         const std::vector<uint8_t> response = takeSingleResponse(communication);
         ASSERT_EQ(response.size(), 5U);
-        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::START_TRACE_RESPONSE));
+        EXPECT_EQ(response[0], static_cast<uint8_t>(TraceProtocolMessageType::StartTraceResponse));
         EXPECT_EQ(response[1], 0U);
         EXPECT_EQ(response[2], 1U);
         EXPECT_EQ(response[3], MissingVariableId);
@@ -283,7 +283,7 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
 
     {
         SCOPED_TRACE("malformed start request does not send a response");
-        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::START_TRACE_REQUEST)});
+        sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::StartTraceRequest)});
         controller.checkForMessage();
         EXPECT_TRUE(communication.output.empty());
     }

@@ -11,15 +11,15 @@ namespace IntegralMotions::Tracing {
     TraceDataSizeCode getTraceDataSizeCode(uint8_t typeSize) {
         switch (typeSize) {
         case OneByteValueSize:
-            return TraceDataSizeCode::ONE_BYTE;
+            return TraceDataSizeCode::OneByte;
         case TwoByteValueSize:
-            return TraceDataSizeCode::TWO_BYTES;
+            return TraceDataSizeCode::TwoBytes;
         case FourByteValueSize:
-            return TraceDataSizeCode::FOUR_BYTES;
+            return TraceDataSizeCode::FourBytes;
         case EightByteValueSize:
-            return TraceDataSizeCode::EIGHT_BYTES;
+            return TraceDataSizeCode::EightBytes;
         default:
-            return TraceDataSizeCode::ONE_BYTE;
+            return TraceDataSizeCode::OneByte;
         }
     }
 } // namespace IntegralMotions::Tracing

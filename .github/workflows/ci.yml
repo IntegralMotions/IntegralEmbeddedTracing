@@ -37,11 +37,12 @@ jobs:
           style: 'file'          
           tidy-checks: ''        
           database: build
+          files-changed-only: false
           file-annotations: true
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
 
-          ignore-tidy: 'tests/**'
-          ignore-format: 'tests/**'
+          ignore-tidy: 'tests/**|build'
+          ignore-format: 'tests/**|build'
 
       - name: Fail on lint issues
         if: |

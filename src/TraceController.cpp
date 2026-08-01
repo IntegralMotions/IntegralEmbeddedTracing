@@ -27,25 +27,25 @@ namespace {
     constexpr size_t TraceDataHeaderSize = sizeof(IntegralMotions::Tracing::TraceDataHeader);
 
     enum class StartTraceErrorCode : uint8_t {
-        VARIABLE_NOT_FOUND = 0x01,
-        TOO_MANY_VARIABLES = 0x02,
-        DUPLICATE_VARIABLE = 0x03,
+        VariableNotFound = 0x01,
+        TooManyVariables = 0x02,
+        DuplicateVariable = 0x03,
     };
 
 } // namespace
 
 namespace IntegralMotions::Tracing {
 
-    TraceController* TraceController::_instance = nullptr;
+    TraceController* TraceController::instance = nullptr;
 
     void TraceController::init(Communication& comm) {
-        if (_instance == nullptr) {
-            _instance = new TraceController(comm);
+        if (instance == nullptr) {
+            instance = new TraceController(comm);
         }
     }
 
     TraceController& TraceController::get() {
-        return *_instance;
+        return *instance;
     }
 
     TraceController::TraceController(Communication& comm)
@@ -67,11 +67,11 @@ namespace IntegralMotions::Tracing {
             return;
         }
 
-        const size_t crcIndex = messageSize - CrcSize;
-        const uint16_t crc = static_cast<uint16_t>(messageBuffer[crcIndex]) |
-                             (static_cast<uint16_t>(messageBuffer[crcIndex + 1]) << BitsPerByte);
+        const size_t CrcIndex = messageSize - CrcSize;
+        const uint16_t Crc = static_cast<uint16_t>(messageBuffer[CrcIndex]) |
+                             (static_cast<uint16_t>(messageBuffer[CrcIndex + 1]) << BitsPerByte);
 
-        Message message{.buffer = {messageBuffer.data(), crcIndex}, .crc = crc};
+        Message message{.buffer = {messageBuffer.data(), CrcIndex}, .crc = Crc};
         handleIncomingMessage(message);
     }
 
@@ -81,16 +81,16 @@ namespace IntegralMotions::Tracing {
         }
 
         switch (static_cast<TraceProtocolMessageType>(message.buffer[0])) {
-        case TraceProtocolMessageType::GET_CONFIG_REQUEST:
+        case TraceProtocolMessageType::GetConfigRequest:
             sendGetConfigResponse(message);
             break;
-        case TraceProtocolMessageType::GET_ARRAY_CONFIG_REQUEST:
+        case TraceProtocolMessageType::GetArrayConfigRequest:
             sendGetArrayConfigResponse(message);
             break;
-        case TraceProtocolMessageType::START_TRACE_REQUEST:
+        case TraceProtocolMessageType::StartTraceRequest:
             sendStartTraceResponse(message);
             break;
-        case TraceProtocolMessageType::STOP_TRACE_EVENT:
+        case TraceProtocolMessageType::StopTraceEvent:
             _tracingStarted = false;
             break;
         default:
@@ -107,8 +107,8 @@ namespace IntegralMotions::Tracing {
         size_t responseIndex = 0;
         uint8_t traceDataLength = 0;
 
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::TRACE_DATA);
-        const size_t traceDataLengthIndex = responseIndex++;
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::TraceData);
+        const size_t TraceDataLengthIndex = responseIndex++;
 
         for (uint8_t i = 0; i < _amountOfTracedVariables; i++) {
             Trace* trace = _traceTableLookup[_tracedVariableIds[i]];
@@ -117,8 +117,8 @@ namespace IntegralMotions::Tracing {
             }
 
             if (memcmp(trace->value, trace->previousValue, trace->typeSize) != 0) {
-                const size_t traceDataEntrySize = TraceDataHeaderSize + trace->typeSize;
-                if ((responseIndex + traceDataEntrySize + CrcSize) > response.size()) {
+                const size_t TraceDataEntrySize = TraceDataHeaderSize + trace->typeSize;
+                if ((responseIndex + TraceDataEntrySize + CrcSize) > response.size()) {
                     break;
                 }
 
@@ -136,11 +136,11 @@ namespace IntegralMotions::Tracing {
             return;
         }
 
-        response[traceDataLengthIndex] = traceDataLength;
+        response[TraceDataLengthIndex] = traceDataLength;
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
-        response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
-        response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
+        const uint16_t Crc = CRC::calculate(response.data(), responseIndex);
+        response[responseIndex++] = static_cast<uint8_t>(Crc & LowByteMask);
+        response[responseIndex++] = static_cast<uint8_t>((Crc >> BitsPerByte) & LowByteMask);
 
         _framedCommunication.writeMessage(response.data(), responseIndex);
     }
@@ -152,31 +152,31 @@ namespace IntegralMotions::Tracing {
         size_t responseIndex = 0;
         uint8_t variableCount = 0;
 
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GET_CONFIG_RESPONSE);
-        const size_t variableCountIndex = responseIndex++;
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GetConfigResponse);
+        const size_t VariableCountIndex = responseIndex++;
 
         for (uint16_t i = 0; i < _amountOfVariableTraces; i++) {
             const VariableTrace& trace = _variables[i];
-            const size_t nameLength = std::min(strlen(trace.name), static_cast<size_t>(UINT8_MAX));
+            const size_t NameLength = std::min(strlen(trace.name), static_cast<size_t>(UINT8_MAX));
 
-            const size_t variableEntrySize = 3 + nameLength;
-            if ((responseIndex + variableEntrySize + 2) > response.size()) {
+            const size_t VariableEntrySize = 3 + NameLength;
+            if ((responseIndex + VariableEntrySize + 2) > response.size()) {
                 break;
             }
 
             response[responseIndex++] = static_cast<uint8_t>(trace.id);
             response[responseIndex++] = static_cast<uint8_t>(trace.type);
-            response[responseIndex++] = static_cast<uint8_t>(nameLength);
-            memcpy(response.data() + responseIndex, trace.name, nameLength);
-            responseIndex += nameLength;
+            response[responseIndex++] = static_cast<uint8_t>(NameLength);
+            memcpy(response.data() + responseIndex, trace.name, NameLength);
+            responseIndex += NameLength;
             variableCount++;
         }
 
-        response[variableCountIndex] = variableCount;
+        response[VariableCountIndex] = variableCount;
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
-        response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
-        response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
+        const uint16_t Crc = CRC::calculate(response.data(), responseIndex);
+        response[responseIndex++] = static_cast<uint8_t>(Crc & LowByteMask);
+        response[responseIndex++] = static_cast<uint8_t>((Crc >> BitsPerByte) & LowByteMask);
 
         _framedCommunication.writeMessage(response.data(), responseIndex);
         _variableConfigSend = true;
@@ -189,34 +189,34 @@ namespace IntegralMotions::Tracing {
         size_t responseIndex = 0;
         uint8_t arrayVariableCount = 0;
 
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GET_ARRAY_CONFIG_RESPONSE);
-        const size_t arrayVariableCountIndex = responseIndex++;
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GetArrayConfigResponse);
+        const size_t ArrayVariableCountIndex = responseIndex++;
 
         for (uint16_t i = 0; i < _amountOfArrayTraces; i++) {
             const ArrayTrace& trace = _arrays[i];
-            const size_t nameLength = std::min(strlen(trace.name), static_cast<size_t>(UINT8_MAX));
+            const size_t NameLength = std::min(strlen(trace.name), static_cast<size_t>(UINT8_MAX));
 
-            const size_t arrayVariableEntrySize = 5 + nameLength;
-            if ((responseIndex + arrayVariableEntrySize + 2) > response.size()) {
+            const size_t ArrayVariableEntrySize = 5 + NameLength;
+            if ((responseIndex + ArrayVariableEntrySize + 2) > response.size()) {
                 break;
             }
 
-            const uint16_t arrayLength = std::min(trace.length, static_cast<uint32_t>(UINT16_MAX));
+            const uint16_t ArrayLength = std::min(trace.length, static_cast<uint32_t>(UINT16_MAX));
             response[responseIndex++] = static_cast<uint8_t>(trace.id);
             response[responseIndex++] = static_cast<uint8_t>(trace.type);
-            response[responseIndex++] = static_cast<uint8_t>(arrayLength & LowByteMask);
-            response[responseIndex++] = static_cast<uint8_t>((arrayLength >> BitsPerByte) & LowByteMask);
-            response[responseIndex++] = static_cast<uint8_t>(nameLength);
-            memcpy(response.data() + responseIndex, trace.name, nameLength);
-            responseIndex += nameLength;
+            response[responseIndex++] = static_cast<uint8_t>(ArrayLength & LowByteMask);
+            response[responseIndex++] = static_cast<uint8_t>((ArrayLength >> BitsPerByte) & LowByteMask);
+            response[responseIndex++] = static_cast<uint8_t>(NameLength);
+            memcpy(response.data() + responseIndex, trace.name, NameLength);
+            responseIndex += NameLength;
             arrayVariableCount++;
         }
 
-        response[arrayVariableCountIndex] = arrayVariableCount;
+        response[ArrayVariableCountIndex] = arrayVariableCount;
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
-        response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
-        response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
+        const uint16_t Crc = CRC::calculate(response.data(), responseIndex);
+        response[responseIndex++] = static_cast<uint8_t>(Crc & LowByteMask);
+        response[responseIndex++] = static_cast<uint8_t>((Crc >> BitsPerByte) & LowByteMask);
 
         _framedCommunication.writeMessage(response.data(), responseIndex);
         _arrayConfigSend = true;
@@ -229,78 +229,78 @@ namespace IntegralMotions::Tracing {
 
         std::array<uint8_t, MaxStartTraceResponseSize> response;
         size_t responseIndex = 0;
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::START_TRACE_RESPONSE);
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::StartTraceResponse);
 
         _amountOfTracedVariables = 0;
         uint8_t mappingCount = 0;
-        const size_t mappingCountIndex = responseIndex++;
+        const size_t MappingCountIndex = responseIndex++;
 
-        const size_t requestedVariableCount = message.buffer[StartTraceVariableCountOffset];
-        const size_t errorCountIndex = responseIndex + (requestedVariableCount * StartTraceMappingEntrySize);
-        size_t errorResponseIndex = errorCountIndex + 1;
+        const size_t RequestedVariableCount = message.buffer[StartTraceVariableCountOffset];
+        const size_t ErrorCountIndex = responseIndex + (RequestedVariableCount * StartTraceMappingEntrySize);
+        size_t errorResponseIndex = ErrorCountIndex + 1;
         uint8_t errorCount = 0;
 
-        for (size_t i = 0; i < requestedVariableCount; i++) {
-            const size_t variableIdIndex = StartTraceVariableIdsOffset + i;
-            if (variableIdIndex >= message.buffer.size()) {
+        for (size_t i = 0; i < RequestedVariableCount; i++) {
+            const size_t VariableIdIndex = StartTraceVariableIdsOffset + i;
+            if (VariableIdIndex >= message.buffer.size()) {
                 break;
             }
 
-            const uint8_t variableId = message.buffer[variableIdIndex];
-            StartTraceErrorCode errorCode = StartTraceErrorCode::VARIABLE_NOT_FOUND;
+            const uint8_t VariableId = message.buffer[VariableIdIndex];
+            StartTraceErrorCode errorCode = StartTraceErrorCode::VariableNotFound;
             bool hasError = false;
 
-            if (_traceTableLookup[variableId] == nullptr) {
+            if (_traceTableLookup[VariableId] == nullptr) {
                 hasError = true;
-                errorCode = StartTraceErrorCode::VARIABLE_NOT_FOUND;
+                errorCode = StartTraceErrorCode::VariableNotFound;
             }
 
             for (uint8_t j = 0; j < _amountOfTracedVariables; j++) {
-                if (_tracedVariableIds[j] == variableId) {
+                if (_tracedVariableIds[j] == VariableId) {
                     hasError = true;
-                    errorCode = StartTraceErrorCode::DUPLICATE_VARIABLE;
+                    errorCode = StartTraceErrorCode::DuplicateVariable;
                     break;
                 }
             }
 
             if (!hasError && _amountOfTracedVariables >= TraceController::MaxActiveTraceVariables) {
                 hasError = true;
-                errorCode = StartTraceErrorCode::TOO_MANY_VARIABLES;
+                errorCode = StartTraceErrorCode::TooManyVariables;
             }
 
             if (hasError) {
                 if ((errorResponseIndex + StartTraceErrorEntrySize + CrcSize) > response.size()) {
                     break;
                 }
-                response[errorResponseIndex++] = variableId;
+                response[errorResponseIndex++] = VariableId;
                 response[errorResponseIndex++] = static_cast<uint8_t>(errorCode);
                 errorCount++;
                 continue;
             }
 
-            if ((responseIndex + StartTraceMappingEntrySize) > errorCountIndex) {
+            if ((responseIndex + StartTraceMappingEntrySize) > ErrorCountIndex) {
                 break;
             }
 
-            const uint8_t traceVariableId = _amountOfTracedVariables;
-            _tracedVariableIds[_amountOfTracedVariables++] = variableId;
-            response[responseIndex++] = variableId;
-            response[responseIndex++] = traceVariableId;
+            const uint8_t TraceVariableId = _amountOfTracedVariables;
+            _tracedVariableIds[_amountOfTracedVariables++] = VariableId;
+            response[responseIndex++] = VariableId;
+            response[responseIndex++] = TraceVariableId;
             mappingCount++;
         }
 
-        response[mappingCountIndex] = mappingCount;
+        response[MappingCountIndex] = mappingCount;
         response[responseIndex++] = errorCount;
 
         if (errorCount > 0) {
-            memmove(response.data() + responseIndex, response.data() + errorCountIndex + 1,
+            memmove(response.data() + responseIndex, response.data() + ErrorCountIndex + 1,
                     errorCount * StartTraceErrorEntrySize);
             responseIndex += errorCount * StartTraceErrorEntrySize;
         }
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
-        response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
-        response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
+        const uint16_t Crc = CRC::calculate(response.data(), responseIndex);
+        response[responseIndex++] = static_cast<uint8_t>(Crc & LowByteMask);
+        response[responseIndex++] = static_cast<uint8_t>((Crc >> BitsPerByte) & LowByteMask);
 
         _framedCommunication.writeMessage(response.data(), responseIndex);
         _tracingStarted = mappingCount > 0;
