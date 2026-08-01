@@ -37,6 +37,7 @@ jobs:
           style: 'file'          
           tidy-checks: ''        
           database: build
+          files-changed-only: false
           file-annotations: true
           thread-comments: ${{ github.event_name == 'pull_request' && 'update' }}
 
