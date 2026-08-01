@@ -36,16 +36,16 @@ namespace {
 
 namespace IntegralMotions::Tracing {
 
-    TraceController* TraceController::_instance = nullptr;
+    TraceController* TraceController::instance = nullptr;
 
     void TraceController::init(Communication& comm) {
-        if (_instance == nullptr) {
-            _instance = new TraceController(comm);
+        if (instance == nullptr) {
+            instance = new TraceController(comm);
         }
     }
 
     TraceController& TraceController::get() {
-        return *_instance;
+        return *instance;
     }
 
     TraceController::TraceController(Communication& comm)
@@ -87,7 +87,7 @@ namespace IntegralMotions::Tracing {
         case TraceProtocolMessageType::GetArrayConfigRequest:
             sendGetArrayConfigResponse(message);
             break;
-        case TraceProtocolMessageType::START_TRACE_REQUEST:
+        case TraceProtocolMessageType::StartTraceRequest:
             sendStartTraceResponse(message);
             break;
         case TraceProtocolMessageType::StopTraceEvent:

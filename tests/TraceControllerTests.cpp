@@ -143,7 +143,7 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         EXPECT_EQ(response[1], 2U);
 
         EXPECT_EQ(response[2], FirstVariableId);
-        EXPECT_EQ(response[3], static_cast<uint8_t>(TraceValueType::UINT8));
+        EXPECT_EQ(response[3], static_cast<uint8_t>(TraceValueType::Int8));
         EXPECT_EQ(response[4], 5U);
         EXPECT_EQ(response[5], static_cast<uint8_t>('f'));
         EXPECT_EQ(response[6], static_cast<uint8_t>('i'));
@@ -152,7 +152,7 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         EXPECT_EQ(response[9], static_cast<uint8_t>('t'));
 
         EXPECT_EQ(response[10], SecondVariableId);
-        EXPECT_EQ(response[11], static_cast<uint8_t>(TraceValueType::INT16));
+        EXPECT_EQ(response[11], static_cast<uint8_t>(TraceValueType::Int16));
         EXPECT_EQ(response[12], 6U);
         EXPECT_EQ(response[13], static_cast<uint8_t>('s'));
         EXPECT_EQ(response[14], static_cast<uint8_t>('e'));
