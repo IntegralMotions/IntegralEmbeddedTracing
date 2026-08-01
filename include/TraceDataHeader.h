@@ -4,10 +4,10 @@
 
 namespace IntegralMotions::Tracing {
     enum class TraceDataSizeCode : uint8_t {
-        ONE_BYTE = 0,
-        TWO_BYTES = 1,
-        FOUR_BYTES = 2,
-        EIGHT_BYTES = 3,
+        OneByte = 0,
+        TwoBytes = 1,
+        FourBytes = 2,
+        EightBytes = 3,
     };
 
     struct TraceDataHeader {

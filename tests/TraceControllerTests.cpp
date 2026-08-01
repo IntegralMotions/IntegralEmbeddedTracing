@@ -194,12 +194,12 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
 
         TraceDataHeader firstHeader = readTraceDataHeader(response, 2U);
         EXPECT_EQ(firstHeader.variableId, 0U);
-        EXPECT_EQ(firstHeader.sizeCode, TraceDataSizeCode::ONE_BYTE);
+        EXPECT_EQ(firstHeader.sizeCode, TraceDataSizeCode::OneByte);
         EXPECT_EQ(response[3], firstValue);
 
         TraceDataHeader secondHeader = readTraceDataHeader(response, 4U);
         EXPECT_EQ(secondHeader.variableId, 1U);
-        EXPECT_EQ(secondHeader.sizeCode, TraceDataSizeCode::TWO_BYTES);
+        EXPECT_EQ(secondHeader.sizeCode, TraceDataSizeCode::TwoBytes);
         int16_t tracedSecondValue = 0;
         memcpy(&tracedSecondValue, response.data() + 5U, sizeof(tracedSecondValue));
         EXPECT_EQ(tracedSecondValue, secondValue);
@@ -222,7 +222,7 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         EXPECT_EQ(response[1], 1U);
         TraceDataHeader header = readTraceDataHeader(response, 2U);
         EXPECT_EQ(header.variableId, 0U);
-        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::ONE_BYTE);
+        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::OneByte);
         EXPECT_EQ(response[3], firstValue);
     }
 
@@ -244,7 +244,7 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         EXPECT_EQ(response[1], 1U);
         TraceDataHeader header = readTraceDataHeader(response, 2U);
         EXPECT_EQ(header.variableId, 1U);
-        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::TWO_BYTES);
+        EXPECT_EQ(header.sizeCode, TraceDataSizeCode::TwoBytes);
         int16_t tracedSecondValue = 0;
         memcpy(&tracedSecondValue, response.data() + 3U, sizeof(tracedSecondValue));
         EXPECT_EQ(tracedSecondValue, secondValue);
