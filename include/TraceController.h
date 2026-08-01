@@ -55,7 +55,7 @@ namespace IntegralMotions::Tracing {
         bool _variableConfigSend = false;
         bool _arrayConfigSend = false;
 
-        static TraceController* _instance;
+        static TraceController* instance;
     };
 
     template <typename T> void TraceController::addVariable(const char* name, T* ref) {
@@ -65,7 +65,7 @@ namespace IntegralMotions::Tracing {
         VariableTrace trace;
         trace.name = name;
         trace.type = getTraceValueType<T>();
-        if (trace.type == TraceValueType::UNKNOWN) {
+        if (trace.type == TraceValueType::Unknown) {
             return;
         }
 

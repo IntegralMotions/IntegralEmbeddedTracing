@@ -81,16 +81,16 @@ namespace IntegralMotions::Tracing {
         }
 
         switch (static_cast<TraceProtocolMessageType>(message.buffer[0])) {
-        case TraceProtocolMessageType::GET_CONFIG_REQUEST:
+        case TraceProtocolMessageType::GetConfigRequest:
             sendGetConfigResponse(message);
             break;
-        case TraceProtocolMessageType::GET_ARRAY_CONFIG_REQUEST:
+        case TraceProtocolMessageType::GetArrayConfigRequest:
             sendGetArrayConfigResponse(message);
             break;
         case TraceProtocolMessageType::START_TRACE_REQUEST:
             sendStartTraceResponse(message);
             break;
-        case TraceProtocolMessageType::STOP_TRACE_EVENT:
+        case TraceProtocolMessageType::StopTraceEvent:
             _tracingStarted = false;
             break;
         default:
@@ -107,7 +107,7 @@ namespace IntegralMotions::Tracing {
         size_t responseIndex = 0;
         uint8_t traceDataLength = 0;
 
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::TRACE_DATA);
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::TraceData);
         const size_t traceDataLengthIndex = responseIndex++;
 
         for (uint8_t i = 0; i < _amountOfTracedVariables; i++) {
@@ -152,7 +152,7 @@ namespace IntegralMotions::Tracing {
         size_t responseIndex = 0;
         uint8_t variableCount = 0;
 
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GET_CONFIG_RESPONSE);
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GetConfigResponse);
         const size_t variableCountIndex = responseIndex++;
 
         for (uint16_t i = 0; i < _amountOfVariableTraces; i++) {
@@ -189,7 +189,7 @@ namespace IntegralMotions::Tracing {
         size_t responseIndex = 0;
         uint8_t arrayVariableCount = 0;
 
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GET_ARRAY_CONFIG_RESPONSE);
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::GetArrayConfigResponse);
         const size_t arrayVariableCountIndex = responseIndex++;
 
         for (uint16_t i = 0; i < _amountOfArrayTraces; i++) {
@@ -229,7 +229,7 @@ namespace IntegralMotions::Tracing {
 
         std::array<uint8_t, MaxStartTraceResponseSize> response;
         size_t responseIndex = 0;
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::START_TRACE_RESPONSE);
+        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::StartTraceResponse);
 
         _amountOfTracedVariables = 0;
         uint8_t mappingCount = 0;

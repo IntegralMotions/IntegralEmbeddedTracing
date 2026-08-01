@@ -5,69 +5,69 @@
 
 namespace IntegralMotions::Tracing {
     enum class TraceMessageType : uint8_t {
-        CONFIG = 0x0,
-        ARRAY_CONFIG = 0x1,
-        UPDATE = 0x2,
-        ARRAY_UPDATE = 0x3,
+        Config = 0x0,
+        ArrayConfig = 0x1,
+        Update = 0x2,
+        ArrayUpdate = 0x3,
     };
 
     enum class TraceProtocolMessageType : uint8_t {
-        GET_CONFIG_REQUEST = 0x01,
-        GET_CONFIG_RESPONSE = 0x02,
-        GET_ARRAY_CONFIG_REQUEST = 0x03,
-        GET_ARRAY_CONFIG_RESPONSE = 0x04,
-        START_TRACE_REQUEST = 0x05,
-        START_TRACE_RESPONSE = 0x06,
-        TRACE_DATA = 0x07,
-        STOP_TRACE_EVENT = 0x08,
+        GetConfigRequest = 0x01,
+        GetConfigResponse = 0x02,
+        GetArrayConfigRequest = 0x03,
+        GetArrayConfigResponse = 0x04,
+        StartTraceRequest = 0x05,
+        StartTraceResponse = 0x06,
+        TraceData = 0x07,
+        StopTraceEvent = 0x08,
     };
 
     enum class TraceValueType : uint8_t {
-        UNKNOWN = 0x0,
-        CHAR = 0x1,
-        UCHAR = 0x2,
-        INT8 = 0x3,
-        UINT8 = 0x4,
-        INT16 = 0x5,
-        UINT16 = 0x6,
-        INT32 = 0x7,
-        UINT32 = 0x8,
-        INT64 = 0x9,
-        UINT64 = 0xA,
-        FLOAT = 0xB,
-        DOUBLE = 0xC,
-        LONG_DOUBLE = 0xD,
+        Unknown = 0x0,
+        Char = 0x1,
+        UChar = 0x2,
+        Int8 = 0x3,
+        UInt8 = 0x4,
+        Int16 = 0x5,
+        UInt16 = 0x6,
+        Int32 = 0x7,
+        UInt32 = 0x8,
+        Int64 = 0x9,
+        UInt64 = 0xA,
+        Float = 0xB,
+        Double = 0xC,
+        LongDouble = 0xD,
     };
 
     inline size_t getTraceValueTypeSize(TraceValueType type) {
         switch (type) {
-        case TraceValueType::CHAR:
+        case TraceValueType::Char:
             return sizeof(char);
-        case TraceValueType::UCHAR:
+        case TraceValueType::UChar:
             return sizeof(unsigned char);
-        case TraceValueType::INT8:
+        case TraceValueType::Int8:
             return sizeof(int8_t);
-        case TraceValueType::UINT8:
+        case TraceValueType::UInt8:
             return sizeof(uint8_t);
-        case TraceValueType::INT16:
+        case TraceValueType::Int16:
             return sizeof(int16_t);
-        case TraceValueType::UINT16:
+        case TraceValueType::UInt16:
             return sizeof(uint16_t);
-        case TraceValueType::INT32:
+        case TraceValueType::Int32:
             return sizeof(int32_t);
-        case TraceValueType::UINT32:
+        case TraceValueType::UInt32:
             return sizeof(uint32_t);
-        case TraceValueType::INT64:
+        case TraceValueType::Int64:
             return sizeof(int64_t);
-        case TraceValueType::UINT64:
+        case TraceValueType::UInt64:
             return sizeof(uint64_t);
-        case TraceValueType::FLOAT:
+        case TraceValueType::Float:
             return sizeof(float);
-        case TraceValueType::DOUBLE:
+        case TraceValueType::Double:
             return sizeof(double);
-        case TraceValueType::LONG_DOUBLE:
+        case TraceValueType::LongDouble:
             return sizeof(long double);
-        case TraceValueType::UNKNOWN:
+        case TraceValueType::Unknown:
         default:
             return 0; // Unknown type
         }
@@ -76,50 +76,50 @@ namespace IntegralMotions::Tracing {
     template <typename T> TraceValueType getTraceValueType();
 
     template <typename T> inline TraceValueType getTraceValueType() {
-        return TraceValueType::UNKNOWN;
+        return TraceValueType::Unknown;
     }
 
     template <> inline TraceValueType getTraceValueType<int8_t>() {
-        return TraceValueType::INT8;
+        return TraceValueType::Int8;
     }
 
     template <> inline TraceValueType getTraceValueType<uint8_t>() {
-        return TraceValueType::UINT8;
+        return TraceValueType::UInt8;
     }
 
     template <> inline TraceValueType getTraceValueType<int16_t>() {
-        return TraceValueType::INT16;
+        return TraceValueType::Int16;
     }
 
     template <> inline TraceValueType getTraceValueType<uint16_t>() {
-        return TraceValueType::UINT16;
+        return TraceValueType::UInt16;
     }
 
     template <> inline TraceValueType getTraceValueType<int32_t>() {
-        return TraceValueType::INT32;
+        return TraceValueType::Int32;
     }
 
     template <> inline TraceValueType getTraceValueType<uint32_t>() {
-        return TraceValueType::UINT32;
+        return TraceValueType::UInt32;
     }
 
     template <> inline TraceValueType getTraceValueType<int64_t>() {
-        return TraceValueType::INT64;
+        return TraceValueType::Int64;
     }
 
     template <> inline TraceValueType getTraceValueType<uint64_t>() {
-        return TraceValueType::UINT64;
+        return TraceValueType::UInt64;
     }
 
     template <> inline TraceValueType getTraceValueType<float>() {
-        return TraceValueType::FLOAT;
+        return TraceValueType::Float;
     }
 
     template <> inline TraceValueType getTraceValueType<double>() {
-        return TraceValueType::DOUBLE;
+        return TraceValueType::Double;
     }
 
     template <> inline TraceValueType getTraceValueType<long double>() {
-        return TraceValueType::LONG_DOUBLE;
+        return TraceValueType::LongDouble;
     }
 } // namespace IntegralMotions::Tracing
