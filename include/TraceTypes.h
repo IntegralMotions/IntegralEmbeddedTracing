@@ -73,53 +73,66 @@ namespace IntegralMotions::Tracing {
         }
     }
 
-    template <typename T> TraceValueType getTraceValueType();
+    template <typename T>
+    TraceValueType getTraceValueType();
 
-    template <typename T> inline TraceValueType getTraceValueType() {
+    template <typename T>
+    inline TraceValueType getTraceValueType() {
         return TraceValueType::Unknown;
     }
 
-    template <> inline TraceValueType getTraceValueType<int8_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<int8_t>() {
         return TraceValueType::Int8;
     }
 
-    template <> inline TraceValueType getTraceValueType<uint8_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<uint8_t>() {
         return TraceValueType::UInt8;
     }
 
-    template <> inline TraceValueType getTraceValueType<int16_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<int16_t>() {
         return TraceValueType::Int16;
     }
 
-    template <> inline TraceValueType getTraceValueType<uint16_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<uint16_t>() {
         return TraceValueType::UInt16;
     }
 
-    template <> inline TraceValueType getTraceValueType<int32_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<int32_t>() {
         return TraceValueType::Int32;
     }
 
-    template <> inline TraceValueType getTraceValueType<uint32_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<uint32_t>() {
         return TraceValueType::UInt32;
     }
 
-    template <> inline TraceValueType getTraceValueType<int64_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<int64_t>() {
         return TraceValueType::Int64;
     }
 
-    template <> inline TraceValueType getTraceValueType<uint64_t>() {
+    template <>
+    inline TraceValueType getTraceValueType<uint64_t>() {
         return TraceValueType::UInt64;
     }
 
-    template <> inline TraceValueType getTraceValueType<float>() {
+    template <>
+    inline TraceValueType getTraceValueType<float>() {
         return TraceValueType::Float;
     }
 
-    template <> inline TraceValueType getTraceValueType<double>() {
+    template <>
+    inline TraceValueType getTraceValueType<double>() {
         return TraceValueType::Double;
     }
 
-    template <> inline TraceValueType getTraceValueType<long double>() {
+    template <>
+    inline TraceValueType getTraceValueType<long double>() {
         return TraceValueType::LongDouble;
     }
 } // namespace IntegralMotions::Tracing
