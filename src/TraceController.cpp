@@ -57,7 +57,7 @@ namespace IntegralMotions::Tracing {
     }
 
     void TraceController::checkForMessage() {
-        std::array<uint8_t, MaxIncomingMessageSize> messageBuffer;
+        std::array<uint8_t, MaxIncomingMessageSize> messageBuffer{};
         size_t messageSize = 0;
         if (!_framedCommunication.readMessage(messageBuffer.data(), messageBuffer.size(), messageSize)) {
             return;
@@ -103,7 +103,7 @@ namespace IntegralMotions::Tracing {
             return;
         }
 
-        std::array<uint8_t, MaxTraceDataResponseSize> response;
+        std::array<uint8_t, MaxTraceDataResponseSize> response{};
         size_t responseIndex = 0;
         uint8_t traceDataLength = 0;
 
@@ -147,7 +147,7 @@ namespace IntegralMotions::Tracing {
 
     void TraceController::sendGetConfigResponse(const Message& message) {
         constexpr size_t MaxResponseSize = 1024;
-        std::array<uint8_t, MaxResponseSize> response;
+        std::array<uint8_t, MaxResponseSize> response{};
 
         size_t responseIndex = 0;
         uint8_t variableCount = 0;
@@ -184,7 +184,7 @@ namespace IntegralMotions::Tracing {
 
     void TraceController::sendGetArrayConfigResponse(const Message& message) {
         constexpr size_t MaxResponseSize = 1024;
-        std::array<uint8_t, MaxResponseSize> response;
+        std::array<uint8_t, MaxResponseSize> response{};
 
         size_t responseIndex = 0;
         uint8_t arrayVariableCount = 0;
@@ -227,7 +227,7 @@ namespace IntegralMotions::Tracing {
             return;
         }
 
-        std::array<uint8_t, MaxStartTraceResponseSize> response;
+        std::array<uint8_t, MaxStartTraceResponseSize> response{};
         size_t responseIndex = 0;
         response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::StartTraceResponse);
 

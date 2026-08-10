@@ -25,8 +25,10 @@ namespace IntegralMotions::Tracing {
         TraceController(TraceController&&) = delete;
         TraceController& operator=(TraceController&&) = delete;
 
-        template <typename T> void addVariable(const char* name, T* ref);
-        template <typename T> void addArray(const char* name, T* ref, uint32_t length);
+        template <typename T>
+        void addVariable(const char* name, T* ref);
+        template <typename T>
+        void addArray(const char* name, T* ref, uint32_t length);
 
         void loop();
         void checkForMessage();
@@ -46,11 +48,11 @@ namespace IntegralMotions::Tracing {
         uint16_t _amountOfTraces = 0;
         uint16_t _amountOfVariableTraces = 0;
         uint16_t _amountOfArrayTraces = 0;
-        std::array<VariableTrace, MaxTracedVariables> _variables;
-        std::array<ArrayTrace, MaxTracedVariables> _arrays;
+        std::array<VariableTrace, MaxTracedVariables> _variables = {};
+        std::array<ArrayTrace, MaxTracedVariables> _arrays = {};
         std::array<uint8_t*, MaxTracedVariables> _previousValueStorage = {nullptr};
         std::array<Trace*, MaxTracedVariables> _traceTableLookup = {nullptr};
-        std::array<uint8_t, MaxActiveTraceVariables> _tracedVariableIds;
+        std::array<uint8_t, MaxActiveTraceVariables> _tracedVariableIds = {};
         uint8_t _amountOfTracedVariables = 0;
         bool _variableConfigSend = false;
         bool _arrayConfigSend = false;
@@ -58,7 +60,8 @@ namespace IntegralMotions::Tracing {
         static TraceController* instance;
     };
 
-    template <typename T> void TraceController::addVariable(const char* name, T* ref) {
+    template <typename T>
+    void TraceController::addVariable(const char* name, T* ref) {
         if (_amountOfTraces >= MaxTracedVariables) {
             return;
         }
@@ -81,7 +84,8 @@ namespace IntegralMotions::Tracing {
         _amountOfVariableTraces++;
     }
 
-    template <typename T> void TraceController::addArray(const char* name, T* ref, uint32_t length) {
+    template <typename T>
+    void TraceController::addArray(const char* name, T* ref, uint32_t length) {
         if (_amountOfTraces >= MaxTracedVariables) {
             return;
         }
