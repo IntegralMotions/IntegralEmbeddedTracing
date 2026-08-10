@@ -13,5 +13,5 @@ permissions:
 
 jobs:
   ci:
-    uses: IntegralMotions/CppTooling/.github/workflows/cpp-ci.yml@v0.1.0
+    uses: IntegralMotions/CppTooling/.github/workflows/cpp-ci.yml@v0.1.2
     secrets: inherit
