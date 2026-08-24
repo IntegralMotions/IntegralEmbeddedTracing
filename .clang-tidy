@@ -12,13 +12,15 @@ Checks: >
   cppcoreguidelines-pro-type-member-init,
   cppcoreguidelines-virtual-class-destructor,
   -modernize-use-trailing-return-type,
-  -portability-avoid-pragma-once
+  -portability-avoid-pragma-once,
+  -performance-no-int-to-ptr,
 
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*'
 FormatStyle: none
 
 CheckOptions:
+  # Allow main-like entry-point names.
   readability-identifier-naming.IgnoreMainLikeFunctions: true
 
   # Types: TraceController, VariableTrace
@@ -50,10 +52,20 @@ CheckOptions:
   readability-identifier-naming.PrivateMemberCase: camelBack
   readability-identifier-naming.PrivateMemberPrefix: '_'
 
-  # Constants: MaxTracedVariables, MaxActiveTraceVariables
-  readability-identifier-naming.ConstantCase: CamelCase
-  readability-identifier-naming.ConstantMemberCase: CamelCase
-  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  # Function-local constants: rawAngle, retryCount
+  readability-identifier-naming.LocalConstantCase: camelBack
+  readability-identifier-naming.LocalConstexprVariableCase: camelBack
+
+  # Non-static const class members: configuredResolution
+  readability-identifier-naming.ConstantMemberCase: camelBack
+
+  # Static class constants: encoderCpr
+  readability-identifier-naming.ClassConstantCase: camelBack
+  readability-identifier-naming.ClassConstexprCase: camelBack
+
+  # Namespace/file-scope constants: StatusMask, TwoPi
+  readability-identifier-naming.GlobalConstantCase: CamelCase
+  readability-identifier-naming.GlobalConstexprVariableCase: CamelCase
 
   # Enum values: Unknown, Running
   readability-identifier-naming.EnumConstantCase: CamelCase

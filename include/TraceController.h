@@ -14,8 +14,8 @@
 namespace IntegralMotions::Tracing {
     class TraceController {
       public:
-        static constexpr uint16_t MaxTracedVariables = 256;
-        static constexpr uint8_t MaxActiveTraceVariables = 64;
+        static constexpr uint16_t maxTracedVariables = 256;
+        static constexpr uint8_t maxActiveTraceVariables = 64;
 
         static void init(Communication& comm);
         static TraceController& get();
@@ -48,11 +48,11 @@ namespace IntegralMotions::Tracing {
         uint16_t _amountOfTraces = 0;
         uint16_t _amountOfVariableTraces = 0;
         uint16_t _amountOfArrayTraces = 0;
-        std::array<VariableTrace, MaxTracedVariables> _variables = {};
-        std::array<ArrayTrace, MaxTracedVariables> _arrays = {};
-        std::array<uint8_t*, MaxTracedVariables> _previousValueStorage = {nullptr};
-        std::array<Trace*, MaxTracedVariables> _traceTableLookup = {nullptr};
-        std::array<uint8_t, MaxActiveTraceVariables> _tracedVariableIds = {};
+        std::array<VariableTrace, maxTracedVariables> _variables = {};
+        std::array<ArrayTrace, maxTracedVariables> _arrays = {};
+        std::array<uint8_t*, maxTracedVariables> _previousValueStorage = {nullptr};
+        std::array<Trace*, maxTracedVariables> _traceTableLookup = {nullptr};
+        std::array<uint8_t, maxActiveTraceVariables> _tracedVariableIds = {};
         uint8_t _amountOfTracedVariables = 0;
         bool _variableConfigSend = false;
         bool _arrayConfigSend = false;
@@ -62,7 +62,7 @@ namespace IntegralMotions::Tracing {
 
     template <typename T>
     void TraceController::addVariable(const char* name, T* ref) {
-        if (_amountOfTraces >= MaxTracedVariables) {
+        if (_amountOfTraces >= maxTracedVariables) {
             return;
         }
         VariableTrace trace;
@@ -86,7 +86,7 @@ namespace IntegralMotions::Tracing {
 
     template <typename T>
     void TraceController::addArray(const char* name, T* ref, uint32_t length) {
-        if (_amountOfTraces >= MaxTracedVariables) {
+        if (_amountOfTraces >= maxTracedVariables) {
             return;
         }
         ArrayTrace trace;
