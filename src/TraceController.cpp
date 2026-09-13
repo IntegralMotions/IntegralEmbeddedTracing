@@ -1,6 +1,6 @@
-#include <IntegralCommunication/CRC.h>
+#include <Encoding/SevenBitEncoding.h>
 #include <IntegralCommunication/CobsEncodedCommunication.h>
-#include <IntegralCommunication/Encoding/SevenBitEncoding.h>
+#include <Math/CRC.h>
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -138,7 +138,7 @@ namespace IntegralMotions::Tracing {
 
         response[traceDataLengthIndex] = traceDataLength;
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
+        const uint16_t crc = Math::CRC::calculate(response.data(), responseIndex);
         response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
         response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
 
@@ -174,7 +174,7 @@ namespace IntegralMotions::Tracing {
 
         response[variableCountIndex] = variableCount;
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
+        const uint16_t crc = Math::CRC::calculate(response.data(), responseIndex);
         response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
         response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
 
@@ -214,7 +214,7 @@ namespace IntegralMotions::Tracing {
 
         response[arrayVariableCountIndex] = arrayVariableCount;
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
+        const uint16_t crc = Math::CRC::calculate(response.data(), responseIndex);
         response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
         response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
 
@@ -298,7 +298,7 @@ namespace IntegralMotions::Tracing {
             responseIndex += errorCount * StartTraceErrorEntrySize;
         }
 
-        const uint16_t crc = CRC::calculate(response.data(), responseIndex);
+        const uint16_t crc = Math::CRC::calculate(response.data(), responseIndex);
         response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
         response[responseIndex++] = static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask);
 

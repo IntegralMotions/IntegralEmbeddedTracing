@@ -6,9 +6,9 @@
 #include <cstring>
 #include <vector>
 
-#include <IntegralCommunication/CRC.h>
+#include <Encoding/CobsEncoding.h>
 #include <IntegralCommunication/Communication.h>
-#include <IntegralCommunication/Encoding/CobsEncoding.h>
+#include <Math/CRC.h>
 
 #include "TraceController.h"
 #include "TraceDataHeader.h"
@@ -49,7 +49,7 @@ namespace {
     constexpr uint8_t MissingVariableId = 200;
 
     void appendCrc(std::vector<uint8_t>& payload) {
-        const uint16_t crc = CRC::calculate(payload.data(), payload.size());
+        const uint16_t crc = IntegralMotions::Math::CRC::calculate(payload.data(), payload.size());
         payload.push_back(static_cast<uint8_t>(crc & LowByteMask));
         payload.push_back(static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask));
     }
@@ -57,9 +57,11 @@ namespace {
     std::vector<uint8_t> encodeFrame(std::vector<uint8_t> payload) {
         appendCrc(payload);
 
-        std::vector<uint8_t> encoded(CobsEncoding::getEncodedBufferSize(payload.size()) + 1U);
-        const size_t encodedSize = CobsEncoding::encodeBuffer(payload.data(), payload.size(), encoded.data());
-        encoded[encodedSize] = CobsEncoding::Delimiter;
+        std::vector<uint8_t> encoded(IntegralMotions::Encoding::CobsEncoding::getEncodedBufferSize(payload.size()) +
+                                     1U);
+        const size_t encodedSize =
+            IntegralMotions::Encoding::CobsEncoding::encodeBuffer(payload.data(), payload.size(), encoded.data());
+        encoded[encodedSize] = IntegralMotions::Encoding::CobsEncoding::Delimiter;
         encoded.resize(encodedSize + 1U);
         return encoded;
     }
@@ -70,7 +72,7 @@ namespace {
 
         while (frameStart < frames.size()) {
             const auto delimiter = std::find(frames.begin() + static_cast<std::ptrdiff_t>(frameStart), frames.end(),
-                                             CobsEncoding::Delimiter);
+                                             IntegralMotions::Encoding::CobsEncoding::Delimiter);
             if (delimiter == frames.end()) {
                 break;
             }
@@ -78,8 +80,8 @@ namespace {
             const size_t frameEnd = static_cast<size_t>(std::distance(frames.begin(), delimiter));
             std::vector<uint8_t> decoded(256);
             size_t decodedSize = 0;
-            const bool success = CobsEncoding::decodeBuffer(frames.data() + frameStart, frameEnd - frameStart,
-                                                            decoded.data(), decoded.size(), decodedSize);
+            const bool success = IntegralMotions::Encoding::CobsEncoding::decodeBuffer(
+                frames.data() + frameStart, frameEnd - frameStart, decoded.data(), decoded.size(), decodedSize);
             EXPECT_TRUE(success);
             decoded.resize(decodedSize);
 
@@ -90,7 +92,7 @@ namespace {
             const size_t crcIndex = decoded.size() - 2U;
             const uint16_t crc = static_cast<uint16_t>(decoded[crcIndex]) |
                                  (static_cast<uint16_t>(decoded[crcIndex + 1U]) << BitsPerByte);
-            EXPECT_TRUE(CRC::validate(decoded.data(), crcIndex, crc));
+            EXPECT_TRUE(IntegralMotions::Math::CRC::validate(decoded.data(), crcIndex, crc));
             decoded.resize(crcIndex);
             decodedFrames.push_back(decoded);
 
