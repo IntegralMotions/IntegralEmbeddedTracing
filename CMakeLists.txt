@@ -17,7 +17,7 @@ option(INTEGRAL_BUILD_DEPENDENCY_TESTS "Build tests for fetched dependencies" OF
 FetchContent_Declare(
     IntegralCommunication
     GIT_REPOSITORY https://github.com/IntegralMotions/IntegralCommunication.git
-    GIT_TAG        main
+    GIT_TAG        v1.4.0
     GIT_SHALLOW    TRUE
 )
 
