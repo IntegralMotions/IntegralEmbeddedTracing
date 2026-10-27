@@ -8,7 +8,7 @@
 
 #include <Encoding/CobsEncoding.h>
 #include <IntegralCommunication/Communication.h>
-#include <Math/CRC.h>
+#include <Math/Crc16.h>
 
 #include "TraceController.h"
 #include "TraceDataHeader.h"
@@ -49,7 +49,7 @@ namespace {
     constexpr uint8_t MissingVariableId = 200;
 
     void appendCrc(std::vector<uint8_t>& payload) {
-        const uint16_t crc = IntegralMotions::Math::CRC::calculate(payload.data(), payload.size());
+        const uint16_t crc = IntegralMotions::Math::Crc16::calculate(payload.data(), payload.size());
         payload.push_back(static_cast<uint8_t>(crc & LowByteMask));
         payload.push_back(static_cast<uint8_t>((crc >> BitsPerByte) & LowByteMask));
     }
@@ -92,7 +92,7 @@ namespace {
             const size_t crcIndex = decoded.size() - 2U;
             const uint16_t crc = static_cast<uint16_t>(decoded[crcIndex]) |
                                  (static_cast<uint16_t>(decoded[crcIndex + 1U]) << BitsPerByte);
-            EXPECT_TRUE(IntegralMotions::Math::CRC::validate(decoded.data(), crcIndex, crc));
+            EXPECT_TRUE(IntegralMotions::Math::Crc16::validate(decoded.data(), crcIndex, crc));
             decoded.resize(crcIndex);
             decodedFrames.push_back(decoded);
 
