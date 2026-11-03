@@ -4,6 +4,8 @@ Integral Embedded Tracing is a small embedded tracing library for configuring an
 
 The wire protocol is documented in [docs/protocol.md](docs/protocol.md).
 
+For a virtual serial device to test a tracing host, see [examples](examples/README.md).
+
 ## Communication diagnostics
 
 Pass an application-owned CoreUtilities logger when initializing the controller to
