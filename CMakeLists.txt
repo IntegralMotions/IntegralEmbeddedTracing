@@ -17,7 +17,7 @@ option(INTEGRAL_BUILD_DEPENDENCY_TESTS "Build tests for fetched dependencies" OF
 FetchContent_Declare(
     IntegralCommunication
     GIT_REPOSITORY https://github.com/IntegralMotions/IntegralCommunication.git
-    GIT_TAG        v0.5.1
+    GIT_TAG        v0.5.2
     GIT_SHALLOW    TRUE
 )
 
@@ -83,4 +83,5 @@ if(INTEGRAL_BUILD_TESTS)
     gtest_discover_tests(IntegralEmbeddedTracingTests
         PROPERTIES LABELS IntegralEmbeddedTracing
     )
+
 endif()

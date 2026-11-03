@@ -11,6 +11,7 @@
 #include <Math/Crc16.h>
 
 #include "TraceController.h"
+#include "TraceControllerTestGuard.h"
 #include "TraceDataHeader.h"
 #include "TraceTypes.h"
 
@@ -125,6 +126,7 @@ namespace {
 
 TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
     TestCommunication communication;
+    TraceControllerTestGuard guard;
     TraceController::init(communication);
     TraceController& controller = TraceController::get();
 

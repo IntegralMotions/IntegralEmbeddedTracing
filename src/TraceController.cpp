@@ -44,12 +44,32 @@ namespace IntegralMotions::Tracing {
         }
     }
 
+    void TraceController::init(Communication& comm, IntegralMotions::Diagnostics::Logger& logger) {
+        if (instance == nullptr) {
+            instance = new TraceController(comm, logger);
+        }
+    }
+
+    void TraceController::shutdown() {
+        delete instance;
+        instance = nullptr;
+    }
+
     TraceController& TraceController::get() {
         return *instance;
     }
 
     TraceController::TraceController(Communication& comm)
         : _framedCommunication(comm, FramedCommunicationTxSize, FramedCommunicationRxSize) {}
+
+    TraceController::TraceController(Communication& comm, IntegralMotions::Diagnostics::Logger& logger)
+        : _framedCommunication(comm, FramedCommunicationTxSize, FramedCommunicationRxSize, logger), _logger(&logger) {}
+
+    TraceController::~TraceController() {
+        for (uint8_t* previousValue : _previousValueStorage) {
+            delete[] previousValue;
+        }
+    }
 
     void TraceController::loop() {
         checkForMessage();
@@ -64,6 +84,9 @@ namespace IntegralMotions::Tracing {
         }
 
         if (messageSize < 3) {
+            if (_logger != nullptr) {
+                _logger->logWarning("Trace message too short: size={}", messageSize);
+            }
             return;
         }
 
@@ -94,6 +117,9 @@ namespace IntegralMotions::Tracing {
             _tracingStarted = false;
             break;
         default:
+            if (_logger != nullptr) {
+                _logger->logWarning("Unknown trace message type: type={}", message.buffer[0]);
+            }
             break;
         }
     }
@@ -161,6 +187,9 @@ namespace IntegralMotions::Tracing {
 
             const size_t variableEntrySize = 3 + nameLength;
             if ((responseIndex + variableEntrySize + 2) > response.size()) {
+                if (_logger != nullptr) {
+                    _logger->logWarning("Trace variable configuration response truncated");
+                }
                 break;
             }
 
@@ -198,6 +227,9 @@ namespace IntegralMotions::Tracing {
 
             const size_t arrayVariableEntrySize = 5 + nameLength;
             if ((responseIndex + arrayVariableEntrySize + 2) > response.size()) {
+                if (_logger != nullptr) {
+                    _logger->logWarning("Trace array configuration response truncated");
+                }
                 break;
             }
 
@@ -222,8 +254,12 @@ namespace IntegralMotions::Tracing {
         _arrayConfigSend = true;
     }
 
+    // NOLINTNEXTLINE(readability-function-cognitive-complexity)
     void TraceController::sendStartTraceResponse(const Message& message) {
         if (message.buffer.size() <= StartTraceVariableCountOffset) {
+            if (_logger != nullptr) {
+                _logger->logWarning("Start trace request missing variable count");
+            }
             return;
         }
 
@@ -243,6 +279,10 @@ namespace IntegralMotions::Tracing {
         for (size_t i = 0; i < requestedVariableCount; i++) {
             const size_t variableIdIndex = StartTraceVariableIdsOffset + i;
             if (variableIdIndex >= message.buffer.size()) {
+                if (_logger != nullptr) {
+                    _logger->logWarning("Start trace request truncated: requested={} available={}",
+                                        requestedVariableCount, message.buffer.size() - StartTraceVariableIdsOffset);
+                }
                 break;
             }
 
