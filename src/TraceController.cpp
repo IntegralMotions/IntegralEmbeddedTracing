@@ -319,11 +319,11 @@ namespace IntegralMotions::Tracing {
 
             const uint8_t traceVariableId = _amountOfTracedVariables;
             Trace* trace = _traceTableLookup[variableId];
-            _activeTraces[traceVariableId] = {
-                .trace = trace,
-                .header = {.variableId = traceVariableId, .sizeCode = trace->updateHeader.sizeCode},
-                .entrySize = static_cast<uint16_t>(TraceDataHeaderSize + trace->typeSize),
-            };
+            ActiveTrace& active = _activeTraces[traceVariableId];
+            active.trace = trace;
+            active.header.variableId = traceVariableId;
+            active.header.sizeCode = trace->updateHeader.sizeCode;
+            active.entrySize = static_cast<uint16_t>(TraceDataHeaderSize + trace->typeSize);
             _tracedVariableIds[_amountOfTracedVariables++] = variableId;
             response[responseIndex++] = variableId;
             response[responseIndex++] = traceVariableId;
