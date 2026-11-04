@@ -6,6 +6,15 @@ The wire protocol is documented in [docs/protocol.md](docs/protocol.md).
 
 For a virtual serial device to test a tracing host, see [examples](examples/README.md).
 
+## Sampling work
+
+The controller prepares active-variable pointers, update headers, and entry sizes
+when a trace starts. It reuses a 1 KiB response buffer instead of clearing a new
+one for each update. This trades additional controller-owned RAM for less
+per-sample work; CRC calculation and COBS framing still run for each message.
+Controller calls must be serialized and must not be reentrant, including across
+interrupts and threads.
+
 ## Communication diagnostics
 
 Pass an application-owned CoreUtilities logger when initializing the controller to
