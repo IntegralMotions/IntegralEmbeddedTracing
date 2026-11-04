@@ -1,9 +1,9 @@
 #include <IntegralCommunication/Communication.h>
 #include <TraceController.h>
 
-#include <cerrno>
 #include <algorithm>
 #include <array>
+#include <cerrno>
 #include <chrono>
 #include <cmath>
 #include <csignal>
@@ -30,7 +30,9 @@
 namespace {
     volatile std::sig_atomic_t running = 1;
 
-    void stop(int) { running = 0; }
+    void stop(int) {
+        running = 0;
+    }
 
     // Aggregate complete COBS frames without changing their bytes or boundaries.
     // Flushing every 250 us avoids a kernel write for each 8.33 us sample.
@@ -40,19 +42,29 @@ namespace {
         explicit BatchedCommunication(Transport& transport) : _transport(transport) {}
 
         bool flush() {
-            if (_failed) return false;
-            if (_size == 0) return true;
+            if (_failed)
+                return false;
+            if (_size == 0)
+                return true;
             _failed = !_transport.writeAll(_buffer.data(), _size);
             _size = 0;
             return !_failed;
         }
 
       private:
-        size_t availableImpl() override { return _transport.available(); }
-        size_t readImpl(uint8_t* data, size_t size) override { return _transport.read(data, size); }
+        size_t availableImpl() override {
+            return _transport.available();
+        }
+        size_t readImpl(uint8_t* data, size_t size) override {
+            return _transport.read(data, size);
+        }
         size_t writeImpl(const uint8_t* data, size_t size) override {
-            if (_failed || size > _buffer.size()) { _failed = true; return 0; }
-            if (size > _buffer.size() - _size && !flush()) return 0;
+            if (_failed || size > _buffer.size()) {
+                _failed = true;
+                return 0;
+            }
+            if (size > _buffer.size() - _size && !flush())
+                return 0;
             std::copy_n(data, size, _buffer.data() + _size);
             _size += size;
             return size;
@@ -70,10 +82,14 @@ namespace {
         explicit SerialCommunication(const char* port) {
             const std::string path = std::string("\\\\.\\") + port;
             _handle = CreateFileA(path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
-            if (_handle == INVALID_HANDLE_VALUE) return;
+            if (_handle == INVALID_HANDLE_VALUE)
+                return;
             DCB settings{};
             settings.DCBlength = sizeof(settings);
-            if (!GetCommState(_handle, &settings)) { close(); return; }
+            if (!GetCommState(_handle, &settings)) {
+                close();
+                return;
+            }
             settings.BaudRate = 115200;
             settings.ByteSize = 8;
             settings.Parity = NOPARITY;
@@ -87,15 +103,25 @@ namespace {
             COMMTIMEOUTS timeouts{};
             timeouts.ReadIntervalTimeout = MAXDWORD;
             timeouts.WriteTotalTimeoutConstant = 100;
-            if (!SetCommState(_handle, &settings) || !SetCommTimeouts(_handle, &timeouts)) close();
+            if (!SetCommState(_handle, &settings) || !SetCommTimeouts(_handle, &timeouts))
+                close();
         }
-        ~SerialCommunication() override { close(); }
-        bool isOpen() const { return _handle != INVALID_HANDLE_VALUE; }
-        bool writeAll(const uint8_t* data, size_t size) { return writeImpl(data, size) == size; }
+        ~SerialCommunication() override {
+            close();
+        }
+        bool isOpen() const {
+            return _handle != INVALID_HANDLE_VALUE;
+        }
+        bool writeAll(const uint8_t* data, size_t size) {
+            return writeImpl(data, size) == size;
+        }
 
       private:
         void close() {
-            if (isOpen()) { CloseHandle(_handle); _handle = INVALID_HANDLE_VALUE; }
+            if (isOpen()) {
+                CloseHandle(_handle);
+                _handle = INVALID_HANDLE_VALUE;
+            }
         }
         size_t availableImpl() override {
             COMSTAT state{};
@@ -122,7 +148,9 @@ namespace {
     class PtyCommunication : public Communication {
       public:
         explicit PtyCommunication(int fd) : _fd(fd) {}
-        bool writeAll(const uint8_t* data, size_t size) { return writeImpl(data, size) == size; }
+        bool writeAll(const uint8_t* data, size_t size) {
+            return writeImpl(data, size) == size;
+        }
 
       private:
         size_t availableImpl() override {
@@ -151,7 +179,8 @@ namespace {
                     continue;
                 } else if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
                     pollfd descriptor{_fd, POLLOUT, 0};
-                    if (poll(&descriptor, 1, 100) < 0 && errno != EINTR) break;
+                    if (poll(&descriptor, 1, 100) < 0 && errno != EINTR)
+                        break;
                 } else {
                     break;
                 }
@@ -180,8 +209,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 #else
-    (void)argc;
-    (void)argv;
+    (void) argc;
+    (void) argv;
     int master = -1;
     int slave = -1;
     if (openpty(&master, &slave, nullptr, nullptr, nullptr) != 0) {
@@ -245,7 +274,8 @@ int main(int argc, char** argv) {
     }
 
     std::cout << "Serial port: " << port << "\n"
-              << "Connect your tracing host, then request config and start tracing. Ctrl-C to stop.\n" << std::flush;
+              << "Connect your tracing host, then request config and start tracing. Ctrl-C to stop.\n"
+              << std::flush;
 
     const auto interval = std::chrono::ceil<Clock::duration>(std::chrono::duration<double>(1.0 / sampleRate));
     auto nextSample = Clock::now();
@@ -272,7 +302,8 @@ int main(int argc, char** argv) {
         currentV = currents[phase].v;
         currentW = currents[phase].w;
         controller.checkForUpdates();
-        if (++phase == samplesPerCycle) phase = 0;
+        if (++phase == samplesPerCycle)
+            phase = 0;
     }
 
     IntegralMotions::Tracing::TraceController::shutdown();

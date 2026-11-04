@@ -41,7 +41,7 @@ namespace IntegralMotions::Tracing {
         void checkForUpdates();
 
       private:
-        static constexpr size_t TraceDataResponseCapacity = 1024;
+        static constexpr size_t traceDataResponseCapacity = 1024;
         struct ActiveTrace {
             Trace* trace = nullptr;
             TraceDataHeader header{};
@@ -70,8 +70,9 @@ namespace IntegralMotions::Tracing {
         std::array<uint8_t, maxActiveTraceVariables> _tracedVariableIds = {};
         // Prepared at trace start, not rebuilt for every sample.
         std::array<ActiveTrace, maxActiveTraceVariables> _activeTraces = {};
-        std::array<uint8_t, TraceDataResponseCapacity> _traceDataResponse = {
-            static_cast<uint8_t>(TraceProtocolMessageType::TraceData)};
+        std::array<uint8_t, traceDataResponseCapacity> _traceDataResponse = {
+            static_cast<uint8_t>(TraceProtocolMessageType::TraceData),
+        };
         uint8_t _amountOfTracedVariables = 0;
         bool _variableConfigSend = false;
         bool _arrayConfigSend = false;
