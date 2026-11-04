@@ -17,7 +17,7 @@ option(INTEGRAL_BUILD_DEPENDENCY_TESTS "Build tests for fetched dependencies" OF
 FetchContent_Declare(
     IntegralCommunication
     GIT_REPOSITORY https://github.com/IntegralMotions/IntegralCommunication.git
-    GIT_TAG        v0.5.1
+    GIT_TAG        v0.5.2
     GIT_SHALLOW    TRUE
 )
 
@@ -55,6 +55,18 @@ target_link_libraries(IntegralEmbeddedTracing PUBLIC
     IntegralCommunication::IntegralCommunication
 )
 
+option(INTEGRAL_BUILD_EXAMPLES "Build IntegralEmbeddedTracing examples" OFF)
+if(INTEGRAL_BUILD_EXAMPLES)
+    if(NOT (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR APPLE OR WIN32))
+        message(FATAL_ERROR "The serial example requires Linux, macOS, or Windows")
+    endif()
+    add_executable(TracingSerialDevice examples/serial_device.cpp)
+    target_link_libraries(TracingSerialDevice PRIVATE IntegralEmbeddedTracing::IntegralEmbeddedTracing)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        target_link_libraries(TracingSerialDevice PRIVATE util)
+    endif()
+endif()
+
 # ----------------- Tests -----------------
 if(INTEGRAL_BUILD_TESTS)
     FetchContent_Declare(
@@ -83,4 +95,5 @@ if(INTEGRAL_BUILD_TESTS)
     gtest_discover_tests(IntegralEmbeddedTracingTests
         PROPERTIES LABELS IntegralEmbeddedTracing
     )
+
 endif()

@@ -18,7 +18,6 @@ namespace {
     constexpr size_t StartTraceVariableIdsOffset = 2;
     constexpr size_t MaxIncomingMessageSize = 1024;
     constexpr size_t MaxStartTraceResponseSize = 1027;
-    constexpr size_t MaxTraceDataResponseSize = 1024;
     constexpr size_t FramedCommunicationTxSize = 4096;
     constexpr size_t FramedCommunicationRxSize = 4096;
     constexpr size_t StartTraceMappingEntrySize = 2;
@@ -44,12 +43,32 @@ namespace IntegralMotions::Tracing {
         }
     }
 
+    void TraceController::init(Communication& comm, IntegralMotions::Diagnostics::Logger& logger) {
+        if (instance == nullptr) {
+            instance = new TraceController(comm, logger);
+        }
+    }
+
+    void TraceController::shutdown() {
+        delete instance;
+        instance = nullptr;
+    }
+
     TraceController& TraceController::get() {
         return *instance;
     }
 
     TraceController::TraceController(Communication& comm)
         : _framedCommunication(comm, FramedCommunicationTxSize, FramedCommunicationRxSize) {}
+
+    TraceController::TraceController(Communication& comm, IntegralMotions::Diagnostics::Logger& logger)
+        : _framedCommunication(comm, FramedCommunicationTxSize, FramedCommunicationRxSize, logger), _logger(&logger) {}
+
+    TraceController::~TraceController() {
+        for (uint8_t* previousValue : _previousValueStorage) {
+            delete[] previousValue;
+        }
+    }
 
     void TraceController::loop() {
         checkForMessage();
@@ -64,6 +83,9 @@ namespace IntegralMotions::Tracing {
         }
 
         if (messageSize < 3) {
+            if (_logger != nullptr) {
+                _logger->logWarning("Trace message too short: size={}", messageSize);
+            }
             return;
         }
 
@@ -94,6 +116,9 @@ namespace IntegralMotions::Tracing {
             _tracingStarted = false;
             break;
         default:
+            if (_logger != nullptr) {
+                _logger->logWarning("Unknown trace message type: type={}", message.buffer[0]);
+            }
             break;
         }
     }
@@ -103,27 +128,23 @@ namespace IntegralMotions::Tracing {
             return;
         }
 
-        std::array<uint8_t, MaxTraceDataResponseSize> response{};
-        size_t responseIndex = 0;
+        auto& response = _traceDataResponse;
+        size_t responseIndex = 2;
         uint8_t traceDataLength = 0;
 
-        response[responseIndex++] = static_cast<uint8_t>(TraceProtocolMessageType::TraceData);
-        const size_t traceDataLengthIndex = responseIndex++;
-
         for (uint8_t i = 0; i < _amountOfTracedVariables; i++) {
-            Trace* trace = _traceTableLookup[_tracedVariableIds[i]];
+            const ActiveTrace& active = _activeTraces[i];
+            Trace* trace = active.trace;
             if (trace == nullptr || trace->value == nullptr || trace->previousValue == nullptr) {
                 continue;
             }
 
             if (memcmp(trace->value, trace->previousValue, trace->typeSize) != 0) {
-                const size_t traceDataEntrySize = TraceDataHeaderSize + trace->typeSize;
-                if ((responseIndex + traceDataEntrySize + CrcSize) > response.size()) {
+                if ((responseIndex + active.entrySize + CrcSize) > response.size()) {
                     break;
                 }
 
-                TraceDataHeader traceDataHeader{.variableId = i, .sizeCode = trace->updateHeader.sizeCode};
-                memcpy(response.data() + responseIndex, &traceDataHeader, TraceDataHeaderSize);
+                memcpy(response.data() + responseIndex, &active.header, TraceDataHeaderSize);
                 responseIndex += TraceDataHeaderSize;
                 memcpy(response.data() + responseIndex, trace->value, trace->typeSize);
                 responseIndex += trace->typeSize;
@@ -136,7 +157,7 @@ namespace IntegralMotions::Tracing {
             return;
         }
 
-        response[traceDataLengthIndex] = traceDataLength;
+        response[1] = traceDataLength;
 
         const uint16_t crc = Math::Crc16::calculate(response.data(), responseIndex);
         response[responseIndex++] = static_cast<uint8_t>(crc & LowByteMask);
@@ -161,6 +182,9 @@ namespace IntegralMotions::Tracing {
 
             const size_t variableEntrySize = 3 + nameLength;
             if ((responseIndex + variableEntrySize + 2) > response.size()) {
+                if (_logger != nullptr) {
+                    _logger->logWarning("Trace variable configuration response truncated");
+                }
                 break;
             }
 
@@ -198,6 +222,9 @@ namespace IntegralMotions::Tracing {
 
             const size_t arrayVariableEntrySize = 5 + nameLength;
             if ((responseIndex + arrayVariableEntrySize + 2) > response.size()) {
+                if (_logger != nullptr) {
+                    _logger->logWarning("Trace array configuration response truncated");
+                }
                 break;
             }
 
@@ -222,8 +249,12 @@ namespace IntegralMotions::Tracing {
         _arrayConfigSend = true;
     }
 
+    // NOLINTNEXTLINE(readability-function-cognitive-complexity)
     void TraceController::sendStartTraceResponse(const Message& message) {
         if (message.buffer.size() <= StartTraceVariableCountOffset) {
+            if (_logger != nullptr) {
+                _logger->logWarning("Start trace request missing variable count");
+            }
             return;
         }
 
@@ -243,6 +274,10 @@ namespace IntegralMotions::Tracing {
         for (size_t i = 0; i < requestedVariableCount; i++) {
             const size_t variableIdIndex = StartTraceVariableIdsOffset + i;
             if (variableIdIndex >= message.buffer.size()) {
+                if (_logger != nullptr) {
+                    _logger->logWarning("Start trace request truncated: requested={} available={}",
+                                        requestedVariableCount, message.buffer.size() - StartTraceVariableIdsOffset);
+                }
                 break;
             }
 
@@ -283,6 +318,12 @@ namespace IntegralMotions::Tracing {
             }
 
             const uint8_t traceVariableId = _amountOfTracedVariables;
+            Trace* trace = _traceTableLookup[variableId];
+            ActiveTrace& active = _activeTraces[traceVariableId];
+            active.trace = trace;
+            active.header.variableId = traceVariableId;
+            active.header.sizeCode = trace->updateHeader.sizeCode;
+            active.entrySize = static_cast<uint16_t>(TraceDataHeaderSize + trace->typeSize);
             _tracedVariableIds[_amountOfTracedVariables++] = variableId;
             response[responseIndex++] = variableId;
             response[responseIndex++] = traceVariableId;

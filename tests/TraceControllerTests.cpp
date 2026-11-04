@@ -11,6 +11,7 @@
 #include <Math/Crc16.h>
 
 #include "TraceController.h"
+#include "TraceControllerTestGuard.h"
 #include "TraceDataHeader.h"
 #include "TraceTypes.h"
 
@@ -125,6 +126,7 @@ namespace {
 
 TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
     TestCommunication communication;
+    TraceControllerTestGuard guard;
     TraceController::init(communication);
     TraceController& controller = TraceController::get();
 
@@ -289,4 +291,57 @@ TEST(TraceControllerTest, FullControllerFlowCoversConfigStartUpdatesAndStop) {
         controller.checkForMessage();
         EXPECT_TRUE(communication.output.empty());
     }
+}
+
+TEST(TraceControllerTest, PreparedMetadataAndReusableBufferFollowNewSelections) {
+    TestCommunication communication;
+    TraceControllerTestGuard guard;
+    TraceController::init(communication);
+    auto& controller = TraceController::get();
+    uint8_t first = 10;
+    int16_t second = 1000;
+    controller.addVariable("first", &first);
+    controller.addVariable("second", &second);
+
+    sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::StartTraceRequest), 2, 1, 0});
+    controller.checkForMessage();
+    const auto mapping = takeSingleResponse(communication);
+    ASSERT_EQ(mapping, (std::vector<uint8_t>{6, 2, 1, 0, 0, 1, 0}));
+    controller.checkForUpdates();
+    communication.output.clear();
+
+    first = 11;
+    second = 2000;
+    controller.checkForUpdates();
+    const auto full = takeSingleResponse(communication);
+    ASSERT_EQ(full.size(), 7U);
+    EXPECT_EQ(full[1], 2);
+    const auto secondHeader = readTraceDataHeader(full, 2);
+    EXPECT_EQ(secondHeader.variableId, 0);
+    EXPECT_EQ(secondHeader.sizeCode, TraceDataSizeCode::TwoBytes);
+    const auto firstHeader = readTraceDataHeader(full, 5);
+    EXPECT_EQ(firstHeader.variableId, 1);
+    EXPECT_EQ(firstHeader.sizeCode, TraceDataSizeCode::OneByte);
+    EXPECT_EQ(full[6], first);
+
+    sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::StopTraceEvent)});
+    controller.checkForMessage();
+    sendMessage(communication, {static_cast<uint8_t>(TraceProtocolMessageType::StartTraceRequest), 1, 0});
+    controller.checkForMessage();
+    const auto newMapping = takeSingleResponse(communication);
+    ASSERT_EQ(newMapping, (std::vector<uint8_t>{6, 1, 0, 0, 0}));
+
+    first = 12;
+    second = 3000; // No longer selected: it must not appear in the reused buffer.
+    controller.checkForUpdates();
+    const auto shorter = takeSingleResponse(communication);
+    ASSERT_EQ(shorter.size(), 4U);
+    EXPECT_EQ(shorter[0], static_cast<uint8_t>(TraceProtocolMessageType::TraceData));
+    EXPECT_EQ(shorter[1], 1);
+    const auto header = readTraceDataHeader(shorter, 2);
+    EXPECT_EQ(header.variableId, 0);
+    EXPECT_EQ(header.sizeCode, TraceDataSizeCode::OneByte);
+    EXPECT_EQ(shorter[3], first);
+    controller.checkForUpdates();
+    EXPECT_TRUE(communication.output.empty());
 }
