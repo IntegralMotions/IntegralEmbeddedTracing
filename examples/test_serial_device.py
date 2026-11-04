@@ -90,8 +90,32 @@ def main():
         update = receive(fd, pending)
         assert update[0] == 7 and update[1] > 0, update
 
+        # A slow consumer must slow simulated time, not cause skipped samples.
+        time.sleep(0.02)
+        previous_counter = None
+        for _ in range(512):
+            update = receive(fd, pending)
+            assert update[0] == 7, update
+            offset = 2
+            counter = None
+            for _ in range(update[1]):
+                assert offset < len(update), update
+                header = update[offset]
+                offset += 1
+                size = 1 << (header >> 6)
+                assert offset + size <= len(update), update
+                if header & 0x3F == 3:
+                    assert size == 1
+                    counter = update[offset]
+                offset += size
+            assert offset == len(update), update
+            assert counter is not None, "Trace update did not include the counter"
+            if previous_counter is not None:
+                assert counter == (previous_counter + 1) % 256, (previous_counter, counter)
+            previous_counter = counter
+
         os.write(fd, encode(bytes([8])))
-        print("OK: configuration, start response, and trace data received over", line.removeprefix("Serial port: "))
+        print("OK: configuration, start response, and 512 consecutive counter updates over", line.removeprefix("Serial port: "))
     finally:
         if fd is not None:
             os.close(fd)

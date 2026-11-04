@@ -32,6 +32,38 @@ namespace {
 
     void stop(int) { running = 0; }
 
+    // Aggregate complete COBS frames without changing their bytes or boundaries.
+    // Flushing every 250 us avoids a kernel write for each 8.33 us sample.
+    template <typename Transport>
+    class BatchedCommunication : public Communication {
+      public:
+        explicit BatchedCommunication(Transport& transport) : _transport(transport) {}
+
+        bool flush() {
+            if (_failed) return false;
+            if (_size == 0) return true;
+            _failed = !_transport.writeAll(_buffer.data(), _size);
+            _size = 0;
+            return !_failed;
+        }
+
+      private:
+        size_t availableImpl() override { return _transport.available(); }
+        size_t readImpl(uint8_t* data, size_t size) override { return _transport.read(data, size); }
+        size_t writeImpl(const uint8_t* data, size_t size) override {
+            if (_failed || size > _buffer.size()) { _failed = true; return 0; }
+            if (size > _buffer.size() - _size && !flush()) return 0;
+            std::copy_n(data, size, _buffer.data() + _size);
+            _size += size;
+            return size;
+        }
+
+        Transport& _transport;
+        std::array<uint8_t, 16 * 1024> _buffer{};
+        size_t _size = 0;
+        bool _failed = false;
+    };
+
 #ifdef _WIN32
     class SerialCommunication : public Communication {
       public:
@@ -59,6 +91,7 @@ namespace {
         }
         ~SerialCommunication() override { close(); }
         bool isOpen() const { return _handle != INVALID_HANDLE_VALUE; }
+        bool writeAll(const uint8_t* data, size_t size) { return writeImpl(data, size) == size; }
 
       private:
         void close() {
@@ -89,6 +122,7 @@ namespace {
     class PtyCommunication : public Communication {
       public:
         explicit PtyCommunication(int fd) : _fd(fd) {}
+        bool writeAll(const uint8_t* data, size_t size) { return writeImpl(data, size) == size; }
 
       private:
         size_t availableImpl() override {
@@ -177,7 +211,8 @@ int main(int argc, char** argv) {
 #endif
     std::signal(SIGINT, stop);
     std::signal(SIGTERM, stop);
-    IntegralMotions::Tracing::TraceController::init(communication);
+    BatchedCommunication batched(communication);
+    IntegralMotions::Tracing::TraceController::init(batched);
     auto& controller = IntegralMotions::Tracing::TraceController::get();
 
     uint8_t counter = 0;
@@ -189,31 +224,55 @@ int main(int argc, char** argv) {
     controller.addVariable("current_w", &currentW);
     controller.addVariable("counter", &counter);
 
+    using Clock = std::chrono::steady_clock;
+    constexpr double sampleRate = 120000.0;
+    constexpr double twoPi = 6.28318530717958647692;
+    constexpr size_t samplesPerCycle = 2400; // 50 Hz at the target 120 kHz sample rate.
+    constexpr size_t phaseOffset = samplesPerCycle / 3;
+    std::array<float, samplesPerCycle> sine{};
+    for (size_t i = 0; i < sine.size(); ++i) {
+        sine[i] = static_cast<float>(10.0 * std::sin(twoPi * static_cast<double>(i) / samplesPerCycle));
+    }
+    struct PhaseCurrents {
+        float u;
+        float v;
+        float w;
+    };
+    std::array<PhaseCurrents, samplesPerCycle> currents{};
+    for (size_t i = 0; i < currents.size(); ++i) {
+        currents[i] = {sine[i], sine[(i + 2 * phaseOffset) % samplesPerCycle],
+                       sine[(i + phaseOffset) % samplesPerCycle]};
+    }
+
     std::cout << "Serial port: " << port << "\n"
               << "Connect your tracing host, then request config and start tracing. Ctrl-C to stop.\n" << std::flush;
 
-    using Clock = std::chrono::steady_clock;
-    constexpr double sampleRate = 120000.0;
-    constexpr double motorFrequency = 50.0;
-    constexpr double twoPi = 6.28318530717958647692;
-    constexpr double phaseOffset = twoPi / 3.0;
-    const auto start = Clock::now();
-    uint64_t sample = 0;
+    const auto interval = std::chrono::ceil<Clock::duration>(std::chrono::duration<double>(1.0 / sampleRate));
+    auto nextSample = Clock::now();
+    auto nextIO = nextSample;
+    bool writeFailed = false;
+    size_t phase = 0;
     while (running) {
-        const auto elapsed = std::chrono::duration<double>(Clock::now() - start).count();
-        const auto targetSample = static_cast<uint64_t>(elapsed * sampleRate);
-        if (sample <= targetSample) {
-            // Skip missed desktop deadlines rather than attempting an unbounded catch-up.
-            // The counter follows simulated interrupt ticks, including skipped samples.
-            const uint64_t elapsedSamples = targetSample - sample + 1;
-            sample = targetSample + 1;
-            counter = static_cast<uint8_t>(counter + elapsedSamples);
-            const double phase = twoPi * motorFrequency * static_cast<double>(targetSample % 2400) / sampleRate;
-            currentU = static_cast<float>(10.0 * std::sin(phase));
-            currentV = static_cast<float>(10.0 * std::sin(phase - phaseOffset));
-            currentW = static_cast<float>(10.0 * std::sin(phase + phaseOffset));
+        const auto now = Clock::now();
+        if (now >= nextIO) {
+            controller.checkForMessage();
+            if (!batched.flush()) {
+                writeFailed = running != 0;
+                break;
+            }
+            nextIO = Clock::now() + std::chrono::microseconds(250);
         }
-        controller.loop();
+        if (now < nextSample) {
+            continue;
+        }
+        // Never skip or catch up missed ticks. A slow transport slows simulated time.
+        nextSample = now + interval;
+        counter = static_cast<uint8_t>(counter + 1);
+        currentU = currents[phase].u;
+        currentV = currents[phase].v;
+        currentW = currents[phase].w;
+        controller.checkForUpdates();
+        if (++phase == samplesPerCycle) phase = 0;
     }
 
     IntegralMotions::Tracing::TraceController::shutdown();
@@ -221,4 +280,8 @@ int main(int argc, char** argv) {
     close(slave);
     close(master);
 #endif
+    if (writeFailed) {
+        std::cerr << "Serial write failed; stopping rather than discarding samples.\n";
+        return 1;
+    }
 }

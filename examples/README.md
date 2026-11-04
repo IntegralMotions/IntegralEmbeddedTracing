@@ -5,13 +5,14 @@ or Linux. It prints the serial port to open in your host application. No physica
 serial hardware, driver, or `socat` is required on those platforms.
 
 ```sh
-make example
+make example BUILD_TYPE=Release
 ```
 
-This builds and runs the device. Alternatively, use CMake directly:
+This builds and runs the device. `make example` defaults to Release; override
+with `BUILD_TYPE=Debug` when debugging. Alternatively, use CMake directly:
 
 ```sh
-cmake -S . -B build -DINTEGRAL_BUILD_EXAMPLES=ON
+cmake -S . -B build -DINTEGRAL_BUILD_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Release
 cmake --build build --target TracingSerialDevice
 ./build/TracingSerialDevice
 ```
@@ -60,13 +61,27 @@ The device registers these variables in order:
 | 2 | `current_w` | float | Phase W current in amperes |
 | 3 | `counter` | uint8 | Incremented each simulated interrupt; wraps at 255 |
 
-The currents are balanced 50 Hz sine waves, 10 A peak and 120 degrees apart.
-The simulator targets a 120 kHz interrupt rate (one tick every 8.33 µs). This
-is not a real STM interrupt: desktop scheduling and the serial connection do not
-guarantee the rate or delivery of every tick. When deadlines are missed, the
-simulator skips to the current tick and advances the counter accordingly. The
-counter also wraps, so it cannot reveal losses of an exact multiple of 256 ticks.
-The example polls continuously and can use a full CPU core while running.
+The currents are balanced sine waves, 10 A peak and 120 degrees apart. A lookup
+table contains every sample of a 50 Hz cycle at the target 120 kHz sample rate.
+The counter increments exactly once per iteration and the waveform advances
+exactly one sample. No simulated ticks are skipped when the desktop or transport
+cannot keep up: the actual sample rate, and therefore the waveform's wall-clock
+frequency, decrease together. For example, 60 kHz delivery produces a 25 Hz wave.
+
+This is not a real STM interrupt: desktop scheduling and serial throughput cannot
+guarantee 120 kHz or end-to-end delivery. The counter wraps at 256, so it cannot
+reveal transport losses of an exact multiple of 256 samples. The example polls
+continuously and can use a full CPU core while running. Use a Release build for
+the best throughput.
+
+Each sample is paced individually, rather than generating a burst of samples at
+once. A precomputed three-phase lookup table avoids per-sample trigonometry and
+phase-offset calculations. The simulator buffers complete encoded frames and
+writes them together every 250 µs instead of making a system call for each sample.
+Incoming commands are polled at the same interval. This preserves individual
+samples and the wire protocol, with up to approximately 250 µs batching latency
+before scheduling and transport delays. A failed batch write stops the example
+instead of silently continuing after a partial transmission.
 
 It does **not** stream unsolicited data. The host must send a `GetConfigRequest`
 and then a `StartTraceRequest` selecting the desired IDs; the real controller

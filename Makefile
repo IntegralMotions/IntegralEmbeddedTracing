@@ -14,6 +14,7 @@ TOOLING_URL := https://raw.githubusercontent.com/$(TOOLING_REPOSITORY)/$(TOOLING
 include Common.mk
 
 .PHONY: example
+example: BUILD_TYPE = Release
 example:
 	cmake -S . -B "$(BUILD_DIR)" -G "$(GENERATOR)" \
 		-DCMAKE_BUILD_TYPE="$(BUILD_TYPE)" \
