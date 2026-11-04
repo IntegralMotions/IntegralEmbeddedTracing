@@ -15,5 +15,5 @@ jobs:
   ci:
     uses: IntegralMotions/CppTooling/.github/workflows/cpp-ci.yml@v0.1.8
     with:
-      ignore_tidy: 'examples/**'
+      ignore_tidy: 'tests/**|build/**|examples/**'
     secrets: inherit
